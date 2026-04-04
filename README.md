@@ -1,15 +1,16 @@
+
 # 🚀 Scalability Quest - URL Shortener
 
 A scalable URL shortener API built for the MLH PE Hackathon - Scalability Engineering Quest.
 
 ## Tech Stack
 
-- **Backend:** Python/Flask, Peewee ORM
-- **Database:** PostgreSQL
-- **Caching:** Redis
-- **Load Balancer:** Nginx
-- **Containerization:** Docker Compose
-- **Load Testing:** k6
+- Backend: Python/Flask, Peewee ORM
+- Database: PostgreSQL
+- Caching: Redis
+- Load Balancer: Nginx
+- Containerization: Docker Compose
+- Load Testing: k6
 
 ## Features
 
@@ -38,6 +39,7 @@ A scalable URL shortener API built for the MLH PE Hackathon - Scalability Engine
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - PostgreSQL
 - uv (Python package manager)
@@ -155,4 +157,4 @@ k6 run k6/load_test.js
 
 ## License
 
-MIT
+This project is open-source and available under the [MIT License](LICENSE).

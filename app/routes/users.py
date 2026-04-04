@@ -1,4 +1,7 @@
 import os
+import csv
+import io
+import codecs
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist
@@ -65,10 +68,7 @@ def update_user(user_id):
 
 @users_bp.route('/users/bulk', methods=['POST'])
 def bulk_load():
-    import csv
-    import io
-    
-    # 1. Try to find a filename in JSON or Form data
+    # Final, Unified Bulk Load (Conflict Resolved)
     data = {}
     try:
         if request.is_json:
@@ -79,21 +79,24 @@ def bulk_load():
         pass
         
     filename = data.get('file')
-    
-    # 2. Try to find a direct file upload
     uploaded_file = request.files.get('file')
     
     try:
         count = 0
         if uploaded_file:
-            # Handle direct upload
-            stream = io.StringIO(uploaded_file.stream.read().decode("UTF8"), newline=None)
+            # Handle direct stream or codecs iterdecode for safety
+            try:
+                stream = io.StringIO(uploaded_file.stream.read().decode("UTF8"), newline=None)
+            except Exception:
+                # Fallback to remote logic if stream was already read
+                uploaded_file.stream.seek(0)
+                stream = codecs.iterdecode(uploaded_file.stream, 'utf-8')
+                
             reader = csv.DictReader(stream)
             for row in reader:
                 User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
                 count += 1
         elif filename:
-            # Handle filename on disk (What the test usually sends)
             file_path = f"seed_data/{filename}"
             if not os.path.exists(file_path):
                 file_path = filename

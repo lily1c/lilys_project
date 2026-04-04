@@ -61,11 +61,15 @@ def create_event():
     if isinstance(details, dict):
         details = json.dumps(details)
         
+    import datetime
+    timestamp = data.get('timestamp') or datetime.datetime.now()
+        
     event = Event.create(
         url_id=data.get('url_id'), 
         user_id=data.get('user_id'), 
         event_type=data['event_type'], 
-        details=details
+        details=details,
+        timestamp=timestamp
     )
     
     edata = model_to_dict(event)

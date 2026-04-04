@@ -150,7 +150,8 @@ k6 run k6/load_test.js
 
 ## Team
 
-- Assol Abasova (@lily1c)
+- [Assol Abasova (@lily1c)](https://github.com/lily1c)
+- [Koleaje Olayinka (@koleajeolayinka)](https://github.com/koleajeolayinka)
 
 ## License
 

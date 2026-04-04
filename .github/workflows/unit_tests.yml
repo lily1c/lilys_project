@@ -1,4 +1,4 @@
-name: CI Tests
+name: Unit Tests
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    name: Pytest Suite
     runs-on: ubuntu-latest
     
     env:
@@ -19,7 +20,6 @@ jobs:
       DATABASE_PORT: 5432
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      PORT: 5006
 
     services:
       postgres:
@@ -59,20 +59,5 @@ jobs:
       - name: Install dependencies
         run: uv sync
         
-      - name: Run Unit Tests (Pytest)
+      - name: Execute Pytest Suite
         run: uv run pytest
-        
-      - name: Start App for Load Testing
-        run: |
-          uv run gunicorn --bind 0.0.0.0:5006 "app:create_app()" &
-          # Wait for app to be ready
-          timeout 30s bash -c "until curl -s http://localhost:5006/health; do sleep 1; done"
-          
-      - name: Install k6 (Direct Binary)
-        run: |
-          curl -L https://github.com/grafana/k6/releases/download/v0.51.0/k6-v0.51.0-linux-amd64.tar.gz -o k6.tar.gz
-          tar -xzf k6.tar.gz
-          sudo mv k6-v0.51.0-linux-amd64/k6 /usr/local/bin/k6
-          
-      - name: Run k6 Load Test
-        run: k6 run k6/load_test.js --vus 10 --duration 5s

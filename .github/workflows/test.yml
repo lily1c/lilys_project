@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}

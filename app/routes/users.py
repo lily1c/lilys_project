@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist
@@ -45,6 +46,33 @@ def update_user(user_id):
         user.email = data['email']
     user.save()
     return jsonify(model_to_dict(user))
+
+@users_bp.route('/users/bulk', methods=['POST'])
+def bulk_load():
+    import csv
+    data = request.get_json()
+    if not data or 'file' not in data:
+        return jsonify({'error': 'Missing file parameter'}), 400
+    
+    file_path = f"seed_data/{data['file']}"
+    if not os.path.exists(file_path):
+        file_path = data['file']
+        
+    try:
+        with open(file_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                User.get_or_create(
+                    id=row['id'],
+                    defaults={
+                        'username': row['username'],
+                        'email': row['email'],
+                        'created_at': row.get('created_at')
+                    }
+                )
+        return jsonify({'status': 'ok'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):

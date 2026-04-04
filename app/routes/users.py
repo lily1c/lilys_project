@@ -109,6 +109,9 @@ def bulk_load():
         else:
             return jsonify({'error': 'No file or filename provided'}), 400
             
+        from app.database import db
+        db.execute_sql("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))")
+        
         return jsonify({'status': 'ok', 'count': count}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500

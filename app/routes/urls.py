@@ -46,17 +46,17 @@ def shorten():
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'Unsupported URL format'}), 400
 
-    # The Twin's Paradox: Re-use existing short code for the same URL + User
-    existing = URL.select().where(URL.original_url == original_url, URL.user_id == user_id).first()
+    existing = URL.select().where(URL.original_url == original_url)
+    if user_id:
+        existing = existing.where(URL.user_id == user_id)
+    else:
+        existing = existing.where(URL.user_id.is_null())
+    
+    existing = existing.first()
     if existing:
-        return jsonify({
-            'id': existing.id,
-            'short_code': existing.short_code,
-            'short_url': f'{request.host_url}{existing.short_code}',
-            'original_url': existing.original_url,
-            'user_id': existing.user_id,
-            'title': existing.title
-        }), 201
+        edata = model_to_dict(existing)
+        edata['short_url'] = f"{request.scheme}://{request.host}/{existing.short_code}"
+        return jsonify(edata), 201
 
     for attempt in range(10):
         short_code = generate_short_code()
@@ -67,19 +67,13 @@ def shorten():
                 user_id=user_id,
                 title=title
             )
-            # Log to cache
             cache = get_cache()
             if cache:
                 cache.set(f"url:{url_obj.short_code}", url_obj.original_url, ex=3600)
 
-            return jsonify({
-                'id': url_obj.id,
-                'short_code': url_obj.short_code,
-                'short_url': f'{request.host_url}{url_obj.short_code}',
-                'original_url': url_obj.original_url,
-                'user_id': url_obj.user_id,
-                'title': url_obj.title
-            }), 201
+            edata = model_to_dict(url_obj)
+            edata['short_url'] = f"{request.scheme}://{request.host}/{url_obj.short_code}"
+            return jsonify(edata), 201
         except IntegrityError:
             continue
     return jsonify({'error': 'Could not generate unique code'}), 500
@@ -167,23 +161,28 @@ def redirect_url(short_code):
             if cache:
                 cache.set(f"url:{short_code}", original_url, ex=3600)
         else:
-            # We have the URL, but we still need the obj for the inactive check
-            # and to log the event properly.
             url_obj = URL.get(URL.short_code == short_code)
 
-        # The Slumbering Guide: 410 Gone for deactivated links
         if not url_obj.is_active:
             return jsonify({'error': 'URL de-activated'}), 410
 
-        # The Unseen Observer: Log every redirection
+        import json
+        details = {
+            'ip': request.remote_addr, 
+            'user_agent': request.user_agent.string,
+            'referrer': request.headers.get('Referer'),
+            'browser': request.user_agent.browser,
+            'platform': request.user_agent.platform
+        }
+        
         Event.create(
             url_id=url_obj.id,
             user_id=url_obj.user_id,
-            event_type='redirect',
-            details={'ip': request.remote_addr, 'user_agent': request.user_agent.string}
+            event_type='click',
+            details=json.dumps(details),
+            timestamp=datetime.datetime.now()
         )
 
-        # Use 302 for variable redirects (standard) or 301 for permanent
         return redirect(original_url, code=302)
         
     except DoesNotExist:

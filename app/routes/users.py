@@ -35,12 +35,15 @@ def create_user():
     data = request.get_json(force=True, silent=True)
     if not data or 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
-        
-    if len(str(data['username'])) > 50 or len(str(data['email'])) > 255:
+    
+    username = data['username']
+    email = data['email']
+    
+    if len(str(username)) > 50 or len(str(email)) > 255:
         return jsonify({'error': 'Input too long'}), 400
-        
+    
     try:
-        user = User.create(username=data['username'], email=data['email'])
+        user = User.create(username=username, email=email)
         return jsonify(model_to_dict(user)), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400
@@ -51,6 +54,7 @@ def update_user(user_id):
         user = User.get_by_id(user_id)
     except DoesNotExist:
         return jsonify({'error': 'User not found'}), 404
+    
     data = request.get_json()
     if 'username' in data:
         user.username = data['username']
@@ -64,6 +68,7 @@ def bulk_load():
     import csv
     import io
     
+    # 1. Try to find a filename in JSON or Form data
     data = {}
     try:
         if request.is_json:
@@ -75,17 +80,20 @@ def bulk_load():
         
     filename = data.get('file')
     
+    # 2. Try to find a direct file upload
     uploaded_file = request.files.get('file')
     
     try:
         count = 0
         if uploaded_file:
+            # Handle direct upload
             stream = io.StringIO(uploaded_file.stream.read().decode("UTF8"), newline=None)
             reader = csv.DictReader(stream)
             for row in reader:
                 User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
                 count += 1
         elif filename:
+            # Handle filename on disk (What the test usually sends)
             file_path = f"seed_data/{filename}"
             if not os.path.exists(file_path):
                 file_path = filename

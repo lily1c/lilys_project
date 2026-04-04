@@ -28,24 +28,46 @@ def metrics():
 @urls_bp.route('/urls', methods=['POST'])
 @urls_bp.route('/shorten', methods=['POST'])
 def shorten():
-    data = request.get_json()
-    # The tests use 'original_url' instead of just 'url' sometimes
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+        
     original_url = data.get('url') or data.get('original_url')
+    user_id = data.get('user_id')
+    title = data.get('title')
+
     if not original_url:
         return jsonify({'error': 'Missing url field'}), 400
     
+    # The Deceitful Scroll & Unwitting Stranger: Stricter validation
+    if len(original_url) > 2048 or (title and len(title) > 255):
+        return jsonify({'error': 'Input too long'}), 400
+        
     if not original_url.startswith(('http://', 'https://')):
-        return jsonify({'error': 'Invalid URL format'}), 400
-    
+        return jsonify({'error': 'Unsupported URL format'}), 400
+
+    # The Twin's Paradox: Re-use existing short code for the same URL + User
+    existing = URL.select().where(URL.original_url == original_url, URL.user_id == user_id).first()
+    if existing:
+        return jsonify({
+            'id': existing.id,
+            'short_code': existing.short_code,
+            'short_url': f'{request.host_url}{existing.short_code}',
+            'original_url': existing.original_url,
+            'user_id': existing.user_id,
+            'title': existing.title
+        }), 201
+
     for attempt in range(10):
         short_code = generate_short_code()
         try:
             url_obj = URL.create(
                 short_code=short_code,
                 original_url=original_url,
-                user_id=data.get('user_id'),
-                title=data.get('title')
+                user_id=user_id,
+                title=title
             )
+            # Log to cache
             cache = get_cache()
             if cache:
                 cache.set(f"url:{url_obj.short_code}", url_obj.original_url, ex=3600)
@@ -74,10 +96,10 @@ def list_urls():
         query = query.where(URL.is_active == (is_active.lower() == 'true'))
         
     total_items = query.count()
-    sample = [model_to_dict(u) for u in query]
+    # FlATTENED list response
     return jsonify({
         'kind': 'list',
-        'sample': sample,
+        'sample': [model_to_dict(u) for u in query],
         'total_items': total_items
     })
 
@@ -124,29 +146,45 @@ def stats(short_code):
     except DoesNotExist:
         return jsonify({'error': 'URL not found'}), 404
 
+@urls_bp.route('/urls/<short_code>/redirect')
 @urls_bp.route('/<short_code>')
 def redirect_url(short_code):
+    from app.models.event import Event
     cache = get_cache()
+    original_url = None
+    
     if cache:
         try:
             original_url = cache.get(f"url:{short_code}")
-            if original_url:
-                return redirect(original_url, code=307)
         except Exception:
-            # Fallback to database if cache fails
             pass
 
     try:
-        url_obj = URL.get(URL.short_code == short_code)
-        if not url_obj.is_active:
-            return jsonify({'error': 'URL not active'}), 410
-        
-        if cache:
-            try:
-                cache.set(f"url:{short_code}", url_obj.original_url, ex=3600)
-            except Exception:
-                pass
+        url_obj = None
+        if not original_url:
+            url_obj = URL.get(URL.short_code == short_code)
+            original_url = url_obj.original_url
+            if cache:
+                cache.set(f"url:{short_code}", original_url, ex=3600)
+        else:
+            # We have the URL, but we still need the obj for the inactive check
+            # and to log the event properly.
+            url_obj = URL.get(URL.short_code == short_code)
 
-        return redirect(url_obj.original_url, code=307)
+        # The Slumbering Guide: 410 Gone for deactivated links
+        if not url_obj.is_active:
+            return jsonify({'error': 'URL de-activated'}), 410
+
+        # The Unseen Observer: Log every redirection
+        Event.create(
+            url_id=url_obj.id,
+            user_id=url_obj.user_id,
+            event_type='redirect',
+            details={'ip': request.remote_addr, 'user_agent': request.user_agent.string}
+        )
+
+        # Use 302 for variable redirects (standard) or 301 for permanent
+        return redirect(original_url, code=302)
+        
     except DoesNotExist:
         return jsonify({'error': 'URL not found'}), 404

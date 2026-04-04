@@ -50,7 +50,8 @@ def list_events():
 def get_event(event_id):
     try:
         edata = model_to_dict(Event.get_by_id(event_id))
-        import datetime, json
+        import datetime
+        import json
         if edata.get('details'):
             try:
                 edata['details'] = json.loads(edata['details'])

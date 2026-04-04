@@ -22,7 +22,6 @@ def health():
 
 @urls_bp.route('/metrics')
 def metrics():
-    from peewee import fn
     from app.models.user import User
     return jsonify({'total_urls': URL.select().count(), 'total_users': User.select().count()})
 

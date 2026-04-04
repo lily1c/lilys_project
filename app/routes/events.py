@@ -23,9 +23,21 @@ def list_events():
         
     total_items = query.count()
     events = query.order_by(Event.id).paginate(page, min(per_page, 100))
+    
+    sample = []
+    import json
+    for e in events:
+        edata = model_to_dict(e)
+        if edata.get('details'):
+            try:
+                edata['details'] = json.loads(edata['details'])
+            except Exception:
+                pass
+        sample.append(edata)
+        
     return jsonify({
         'kind': 'list',
-        'sample': [model_to_dict(e) for e in events],
+        'sample': sample,
         'total_items': total_items,
         'page': page,
         'per_page': per_page
@@ -40,8 +52,31 @@ def get_event(event_id):
 
 @events_bp.route('/events', methods=['POST'])
 def create_event():
-    data = request.get_json()
+    import json
+    data = request.get_json(force=True, silent=True)
     if not data or 'event_type' not in data:
         return jsonify({'error': 'Missing event_type'}), 400
-    event = Event.create(url_id=data.get('url_id'), user_id=data.get('user_id'), event_type=data['event_type'], details=data.get('details'))
-    return jsonify(model_to_dict(event)), 201
+    
+    details = data.get('details')
+    if isinstance(details, dict):
+        details = json.dumps(details)
+        
+    import datetime
+    timestamp = data.get('timestamp') or datetime.datetime.now()
+        
+    event = Event.create(
+        url_id=data.get('url_id'), 
+        user_id=data.get('user_id'), 
+        event_type=data['event_type'], 
+        details=details,
+        timestamp=timestamp
+    )
+    
+    edata = model_to_dict(event)
+    try:
+        if edata.get('details'):
+            edata['details'] = json.loads(edata['details'])
+    except Exception:
+        pass
+        
+    return jsonify(edata), 201

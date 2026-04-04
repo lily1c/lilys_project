@@ -1,5 +1,6 @@
 import os
 import csv
+import io
 import codecs
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
@@ -34,14 +35,14 @@ def get_user(user_id):
 
 @users_bp.route('/users', methods=['POST'])
 def create_user():
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
     if not data or 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     
     username = data['username']
     email = data['email']
     
-    if len(username) > 50 or len(email) > 255:
+    if len(str(username)) > 50 or len(str(email)) > 255:
         return jsonify({'error': 'Input too long'}), 400
     
     try:
@@ -67,29 +68,47 @@ def update_user(user_id):
 
 @users_bp.route('/users/bulk', methods=['POST'])
 def bulk_load():
+    # Final, Unified Bulk Load (Conflict Resolved)
+    data = {}
     try:
-        # Handling both JSON and Form data to be safe
-        data = request.get_json(force=True, silent=True) or request.form.to_dict()
+        if request.is_json:
+            data = request.get_json(silent=True) or {}
+        else:
+            data = request.form.to_dict()
     except Exception:
-        data = {}
-    
-    file = request.files.get('file')
-    if not file:
-        return jsonify({'error': 'Missing file parameter'}), 400
+        pass
+        
+    filename = data.get('file')
+    uploaded_file = request.files.get('file')
     
     try:
         count = 0
-        reader = csv.DictReader(codecs.iterdecode(file.stream, 'utf-8'))
-        for row in reader:
-            User.get_or_create(
-                id=row['id'],
-                defaults={
-                    'username': row['username'],
-                    'email': row['email'],
-                    'created_at': row.get('created_at')
-                }
-            )
-            count += 1
+        if uploaded_file:
+            # Handle direct stream or codecs iterdecode for safety
+            try:
+                stream = io.StringIO(uploaded_file.stream.read().decode("UTF8"), newline=None)
+            except Exception:
+                # Fallback to remote logic if stream was already read
+                uploaded_file.stream.seek(0)
+                stream = codecs.iterdecode(uploaded_file.stream, 'utf-8')
+                
+            reader = csv.DictReader(stream)
+            for row in reader:
+                User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
+                count += 1
+        elif filename:
+            file_path = f"seed_data/{filename}"
+            if not os.path.exists(file_path):
+                file_path = filename
+            
+            with open(file_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
+                    count += 1
+        else:
+            return jsonify({'error': 'No file or filename provided'}), 400
+            
         return jsonify({'status': 'ok', 'count': count}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500

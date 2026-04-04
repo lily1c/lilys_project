@@ -18,6 +18,7 @@ jobs:
       DATABASE_PORT: 5432
       REDIS_HOST: localhost
       REDIS_PORT: 6379
+      PORT: 5006
 
     services:
       postgres:
@@ -60,8 +61,18 @@ jobs:
       - name: Run Unit Tests (Pytest)
         run: uv run pytest
         
+      - name: Start App for Load Testing
+        run: |
+          uv run gunicorn --bind 0.0.0.0:5006 app:app &
+          # Wait for app to be ready
+          timeout 30s bash -c "until curl -s http://localhost:5006/health; do sleep 1; done"
+          
+      - name: Install k6 (Runner Local)
+        run: |
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D23
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+          
       - name: Run k6 Load Test
-        uses: grafana/k6-action@v0.3.1
-        with:
-          filename: k6/load_test.js
-          flags: --vus 10 --duration 5s
+        run: k6 run k6/load_test.js --vus 10 --duration 5s

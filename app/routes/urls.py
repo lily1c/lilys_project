@@ -1,6 +1,7 @@
 import string
 import random
 import time
+import datetime
 from flask import Blueprint, jsonify, request, redirect
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist, IntegrityError
@@ -178,9 +179,9 @@ def redirect_url(short_code):
         Event.create(
             url_id=url_obj.id,
             user_id=url_obj.user_id,
-            event_type='click',
+            event_type='redirect',
             details=json.dumps(details),
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime.now(datetime.timezone.utc) # Using UTC to avoid timezone mismatches
         )
 
         return redirect(original_url, code=302)

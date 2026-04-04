@@ -83,7 +83,7 @@ curl -X POST http://localhost:5005/shorten \
 | Tier | Requirement | Status |
 |------|-------------|--------|
 | 🥉 Bronze | 50 concurrent users | ✅ Passed |
-| 🥈 Silver | 200 users + load balancer | 🔄 In Progress |
+| 🥈 Silver | 200 users + load balancer | ✅ Passed |
 | 🥇 Gold | 500 users + Redis caching | ✅ Passed |
 
 ## Load Testing

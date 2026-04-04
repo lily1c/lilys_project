@@ -11,9 +11,8 @@ users_bp = Blueprint('users', __name__)
 
 @users_bp.route('/users', methods=['GET'])
 def list_users():
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    per_page = min(per_page, 100)
+    page = max(request.args.get('page', 1, type=int), 1)
+    per_page = min(max(request.args.get('per_page', 20, type=int), 1), 100)
     query = User.select().order_by(User.id)
     total_items = query.count()
     users = query.paginate(page, per_page)
@@ -36,7 +35,9 @@ def get_user(user_id):
 @users_bp.route('/users', methods=['POST'])
 def create_user():
     data = request.get_json(force=True, silent=True)
-    if not data or 'username' not in data or 'email' not in data:
+    if data is None:
+        return jsonify({'error': 'Malformed JSON'}), 400
+    if 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     
     username = data['username']
@@ -58,12 +59,20 @@ def update_user(user_id):
     except DoesNotExist:
         return jsonify({'error': 'User not found'}), 404
     
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({'error': 'Malformed JSON'}), 400
+        
     if 'username' in data:
         user.username = data['username']
     if 'email' in data:
         user.email = data['email']
-    user.save()
+        
+    try:
+        user.save()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+        
     return jsonify(model_to_dict(user))
 
 @users_bp.route('/users/bulk', methods=['POST'])
@@ -120,6 +129,13 @@ def bulk_load():
 def delete_user(user_id):
     try:
         user = User.get_by_id(user_id)
+        # Cascade delete associated URLs and Events
+        from app.models.url import URL
+        from app.models.event import Event
+        
+        Event.delete().where(Event.user_id == user_id).execute()
+        URL.delete().where(URL.user_id == user_id).execute()
+        
         user.delete_instance()
     except DoesNotExist:
         pass

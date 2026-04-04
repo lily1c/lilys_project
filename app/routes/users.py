@@ -1,4 +1,6 @@
 import os
+import csv
+import codecs
 from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist
@@ -65,7 +67,6 @@ def update_user(user_id):
 
 @users_bp.route('/users/bulk', methods=['POST'])
 def bulk_load():
-    import csv
     try:
         # Handling both JSON and Form data to be safe
         data = request.get_json(force=True, silent=True) or request.form.to_dict()
@@ -78,7 +79,7 @@ def bulk_load():
     
     try:
         count = 0
-        reader = csv.DictReader(file.stream)
+        reader = csv.DictReader(codecs.iterdecode(file.stream, 'utf-8'))
         for row in reader:
             User.get_or_create(
                 id=row['id'],

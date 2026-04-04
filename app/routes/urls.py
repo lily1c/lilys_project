@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request, redirect
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist, IntegrityError
 from app.models.url import URL
+from app.cache import get_cache
 
 urls_bp = Blueprint('urls', __name__)
 
@@ -42,6 +43,10 @@ def shorten():
                 user_id=data.get('user_id'),
                 title=data.get('title')
             )
+            cache = get_cache()
+            if cache:
+                cache.set(f"url:{url_obj.short_code}", url_obj.original_url, ex=3600)
+
             return jsonify({
                 'id': url_obj.id,
                 'short_code': url_obj.short_code,
@@ -62,10 +67,27 @@ def stats(short_code):
 
 @urls_bp.route('/<short_code>')
 def redirect_url(short_code):
+    cache = get_cache()
+    if cache:
+        try:
+            original_url = cache.get(f"url:{short_code}")
+            if original_url:
+                return redirect(original_url, code=307)
+        except Exception:
+            # Fallback to database if cache fails
+            pass
+
     try:
         url_obj = URL.get(URL.short_code == short_code)
         if not url_obj.is_active:
             return jsonify({'error': 'URL not active'}), 410
+        
+        if cache:
+            try:
+                cache.set(f"url:{short_code}", url_obj.original_url, ex=3600)
+            except Exception:
+                pass
+
         return redirect(url_obj.original_url, code=307)
     except DoesNotExist:
         return jsonify({'error': 'URL not found'}), 404

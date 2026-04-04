@@ -73,7 +73,13 @@ def list_urls():
     if is_active is not None:
         query = query.where(URL.is_active == (is_active.lower() == 'true'))
         
-    return jsonify([model_to_dict(u) for u in query])
+    total_items = query.count()
+    sample = [model_to_dict(u) for u in query]
+    return jsonify({
+        'kind': 'list',
+        'sample': sample,
+        'total_items': total_items
+    })
 
 @urls_bp.route('/urls/<int:url_id>', methods=['GET'])
 def get_url(url_id):
@@ -106,9 +112,9 @@ def delete_url(url_id):
     try:
         url_obj = URL.get_by_id(url_id)
         url_obj.delete_instance()
-        return '', 204
     except DoesNotExist:
-        return jsonify({'error': 'URL not found'}), 404
+        pass
+    return '', 204
 
 @urls_bp.route('/stats/<short_code>')
 def stats(short_code):

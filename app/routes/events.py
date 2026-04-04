@@ -21,8 +21,16 @@ def list_events():
     if event_type:
         query = query.where(Event.event_type == event_type)
         
+    total_items = query.count()
     events = query.order_by(Event.id).paginate(page, min(per_page, 100))
-    return jsonify([model_to_dict(e) for e in events])
+    sample = [model_to_dict(e) for e in events]
+    return jsonify({
+        'kind': 'list',
+        'sample': sample,
+        'total_items': total_items,
+        'page': page,
+        'per_page': per_page
+    })
 
 @events_bp.route('/events/<int:event_id>', methods=['GET'])
 def get_event(event_id):

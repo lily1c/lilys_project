@@ -11,8 +11,17 @@ def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     per_page = min(per_page, 100)
-    users = User.select().order_by(User.id).paginate(page, per_page)
-    return jsonify([model_to_dict(u) for u in users])
+    query = User.select().order_by(User.id)
+    total_items = query.count()
+    users = query.paginate(page, per_page)
+    sample = [model_to_dict(u) for u in users]
+    return jsonify({
+        'kind': 'list',
+        'sample': sample,
+        'total_items': total_items,
+        'page': page,
+        'per_page': per_page
+    })
 
 @users_bp.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
@@ -50,7 +59,11 @@ def update_user(user_id):
 @users_bp.route('/users/bulk', methods=['POST'])
 def bulk_load():
     import csv
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except Exception:
+        data = {}
+        
     if not data or 'file' not in data:
         return jsonify({'error': 'Missing file parameter'}), 400
     
@@ -59,6 +72,7 @@ def bulk_load():
         file_path = data['file']
         
     try:
+        count = 0
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -70,7 +84,8 @@ def bulk_load():
                         'created_at': row.get('created_at')
                     }
                 )
-        return jsonify({'status': 'ok'}), 201
+                count += 1
+        return jsonify({'status': 'ok', 'count': count}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -79,6 +94,6 @@ def delete_user(user_id):
     try:
         user = User.get_by_id(user_id)
         user.delete_instance()
-        return '', 204
     except DoesNotExist:
-        return jsonify({'error': 'User not found'}), 404
+        pass
+    return '', 204

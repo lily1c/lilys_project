@@ -23,10 +23,9 @@ def list_events():
         
     total_items = query.count()
     events = query.order_by(Event.id).paginate(page, min(per_page, 100))
-    sample = [model_to_dict(e) for e in events]
     return jsonify({
         'kind': 'list',
-        'sample': sample,
+        'sample': [model_to_dict(e) for e in events],
         'total_items': total_items,
         'page': page,
         'per_page': per_page

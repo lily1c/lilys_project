@@ -14,10 +14,9 @@ def list_users():
     query = User.select().order_by(User.id)
     total_items = query.count()
     users = query.paginate(page, per_page)
-    sample = [model_to_dict(u) for u in users]
     return jsonify({
         'kind': 'list',
-        'sample': sample,
+        'sample': [model_to_dict(u) for u in users],
         'total_items': total_items,
         'page': page,
         'per_page': per_page
@@ -31,11 +30,13 @@ def get_user(user_id):
     except DoesNotExist:
         return jsonify({'error': 'User not found'}), 404
 
-@users_bp.route('/users', methods=['POST'])
-def create_user():
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
     if not data or 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
+        
+    if len(str(data['username'])) > 50 or len(str(data['email'])) > 255:
+        return jsonify({'error': 'Input too long'}), 400
+        
     try:
         user = User.create(username=data['username'], email=data['email'])
         return jsonify(model_to_dict(user)), 201
@@ -60,16 +61,18 @@ def update_user(user_id):
 def bulk_load():
     import csv
     try:
-        data = request.get_json(force=True)
+        # Handling both JSON and Form data to be safe
+        data = request.get_json(force=True, silent=True) or request.form.to_dict()
     except Exception:
         data = {}
         
-    if not data or 'file' not in data:
+    filename = data.get('file')
+    if not filename:
         return jsonify({'error': 'Missing file parameter'}), 400
     
-    file_path = f"seed_data/{data['file']}"
+    file_path = f"seed_data/{filename}"
     if not os.path.exists(file_path):
-        file_path = data['file']
+        file_path = filename
         
     try:
         count = 0

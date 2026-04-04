@@ -19,6 +19,12 @@ def init_db(app):
         password=os.environ.get("DATABASE_PASSWORD", "postgres"),
     )
     db.initialize(database)
+    
+    from app.models.user import User
+    from app.models.url import URL
+    from app.models.event import Event
+    
+    db.create_tables([User, URL, Event], safe=True)
 
     @app.before_request
     def _db_connect():

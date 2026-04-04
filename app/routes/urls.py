@@ -25,12 +25,15 @@ def metrics():
     from app.models.user import User
     return jsonify({'total_urls': URL.select().count(), 'total_users': User.select().count()})
 
+@urls_bp.route('/urls', methods=['POST'])
 @urls_bp.route('/shorten', methods=['POST'])
 def shorten():
     data = request.get_json()
-    if not data or 'url' not in data:
+    # The tests use 'original_url' instead of just 'url' sometimes
+    original_url = data.get('url') or data.get('original_url')
+    if not original_url:
         return jsonify({'error': 'Missing url field'}), 400
-    original_url = data['url']
+    
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'Invalid URL format'}), 400
     
@@ -51,11 +54,61 @@ def shorten():
                 'id': url_obj.id,
                 'short_code': url_obj.short_code,
                 'short_url': f'{request.host_url}{url_obj.short_code}',
-                'original_url': url_obj.original_url
+                'original_url': url_obj.original_url,
+                'user_id': url_obj.user_id,
+                'title': url_obj.title
             }), 201
         except IntegrityError:
             continue
     return jsonify({'error': 'Could not generate unique code'}), 500
+
+@urls_bp.route('/urls', methods=['GET'])
+def list_urls():
+    user_id = request.args.get('user_id', type=int)
+    is_active = request.args.get('is_active')
+    
+    query = URL.select()
+    if user_id:
+        query = query.where(URL.user_id == user_id)
+    if is_active is not None:
+        query = query.where(URL.is_active == (is_active.lower() == 'true'))
+        
+    return jsonify([model_to_dict(u) for u in query])
+
+@urls_bp.route('/urls/<int:url_id>', methods=['GET'])
+def get_url(url_id):
+    try:
+        url_obj = URL.get_by_id(url_id)
+        return jsonify(model_to_dict(url_obj))
+    except DoesNotExist:
+        return jsonify({'error': 'URL not found'}), 404
+
+@urls_bp.route('/urls/<int:url_id>', methods=['PUT'])
+def update_url(url_id):
+    try:
+        url_obj = URL.get_by_id(url_id)
+    except DoesNotExist:
+        return jsonify({'error': 'URL not found'}), 404
+        
+    data = request.get_json()
+    if 'title' in data:
+        url_obj.title = data['title']
+    if 'is_active' in data:
+        url_obj.is_active = data['is_active']
+    if 'original_url' in data:
+        url_obj.original_url = data['original_url']
+        
+    url_obj.save()
+    return jsonify(model_to_dict(url_obj))
+
+@urls_bp.route('/urls/<int:url_id>', methods=['DELETE'])
+def delete_url(url_id):
+    try:
+        url_obj = URL.get_by_id(url_id)
+        url_obj.delete_instance()
+        return '', 204
+    except DoesNotExist:
+        return jsonify({'error': 'URL not found'}), 404
 
 @urls_bp.route('/stats/<short_code>')
 def stats(short_code):

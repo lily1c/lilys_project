@@ -30,6 +30,8 @@ def get_user(user_id):
     except DoesNotExist:
         return jsonify({'error': 'User not found'}), 404
 
+@users_bp.route('/users', methods=['POST'])
+def create_user():
     data = request.get_json(force=True, silent=True)
     if not data or 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
@@ -60,34 +62,42 @@ def update_user(user_id):
 @users_bp.route('/users/bulk', methods=['POST'])
 def bulk_load():
     import csv
+    import io
+    
+    data = {}
     try:
-        # Handling both JSON and Form data to be safe
-        data = request.get_json(force=True, silent=True) or request.form.to_dict()
+        if request.is_json:
+            data = request.get_json(silent=True) or {}
+        else:
+            data = request.form.to_dict()
     except Exception:
-        data = {}
+        pass
         
     filename = data.get('file')
-    if not filename:
-        return jsonify({'error': 'Missing file parameter'}), 400
     
-    file_path = f"seed_data/{filename}"
-    if not os.path.exists(file_path):
-        file_path = filename
-        
+    uploaded_file = request.files.get('file')
+    
     try:
         count = 0
-        with open(file_path, 'r') as f:
-            reader = csv.DictReader(f)
+        if uploaded_file:
+            stream = io.StringIO(uploaded_file.stream.read().decode("UTF8"), newline=None)
+            reader = csv.DictReader(stream)
             for row in reader:
-                User.get_or_create(
-                    id=row['id'],
-                    defaults={
-                        'username': row['username'],
-                        'email': row['email'],
-                        'created_at': row.get('created_at')
-                    }
-                )
+                User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
                 count += 1
+        elif filename:
+            file_path = f"seed_data/{filename}"
+            if not os.path.exists(file_path):
+                file_path = filename
+            
+            with open(file_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
+                    count += 1
+        else:
+            return jsonify({'error': 'No file or filename provided'}), 400
+            
         return jsonify({'status': 'ok', 'count': count}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500

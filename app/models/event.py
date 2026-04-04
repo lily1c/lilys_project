@@ -1,3 +1,4 @@
+import datetime
 from peewee import CharField, IntegerField, DateTimeField, TextField, SQL
 from app.database import BaseModel
 
@@ -5,7 +6,7 @@ class Event(BaseModel):
     url_id = IntegerField(null=True)
     user_id = IntegerField(null=True)
     event_type = CharField(max_length=50)
-    timestamp = DateTimeField(constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')])
+    timestamp = DateTimeField(default=datetime.datetime.now)
     details = TextField(null=True)
 
     class Meta:

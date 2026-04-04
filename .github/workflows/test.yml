@@ -63,7 +63,7 @@ jobs:
         
       - name: Start App for Load Testing
         run: |
-          uv run gunicorn --bind 0.0.0.0:5006 app:app &
+          uv run gunicorn --bind 0.0.0.0:5006 "app:create_app()" &
           # Wait for app to be ready
           timeout 30s bash -c "until curl -s http://localhost:5006/health; do sleep 1; done"
           

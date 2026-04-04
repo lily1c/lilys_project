@@ -4,7 +4,6 @@ import { Rate } from 'k6/metrics';
 
 const errorRate = new Rate('errors');
 
-// 🥉 BRONZE: 50 concurrent users
 export const options = {
   stages: [
     { duration: '30s', target: 50 },
@@ -17,31 +16,24 @@ export const options = {
   },
 };
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'http://localhost:5006';
 
 const URLS = [
   'https://github.com',
   'https://google.com',
   'https://stackoverflow.com',
-  'https://reddit.com',
-  'https://twitter.com',
 ];
 
 export default function () {
-  // Health check
   http.get(`${BASE_URL}/health`);
 
-  // Shorten a URL
-  const randomUrl = URLS[Math.floor(Math.random() * URLS.length)];
   const res = http.post(
     `${BASE_URL}/shorten`,
-    JSON.stringify({ url: randomUrl }),
+    JSON.stringify({ url: URLS[Math.floor(Math.random() * URLS.length)] }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 
-  const ok = check(res, {
-    'status 201': (r) => r.status === 201,
-  });
+  const ok = check(res, { 'status 201': (r) => r.status === 201 });
   errorRate.add(!ok);
 
   if (ok) {

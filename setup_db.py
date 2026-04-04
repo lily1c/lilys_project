@@ -1,10 +1,13 @@
 import os
 import csv
 from peewee import PostgresqlDatabase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 db = PostgresqlDatabase(
     os.getenv('DATABASE_NAME', 'hackathon_db'),
-    user=os.getenv('DATABASE_USER', 'assolabasova'),
+    user=os.getenv('DATABASE_USER', 'postgres'),
     password=os.getenv('DATABASE_PASSWORD', ''),
     host=os.getenv('DATABASE_HOST', 'localhost'),
     port=int(os.getenv('DATABASE_PORT', 5432))

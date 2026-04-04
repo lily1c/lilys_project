@@ -6,13 +6,13 @@ const errorRate = new Rate('errors');
 
 export const options = {
   stages: [
-    { duration: '30s', target: 50 },
-    { duration: '1m', target: 50 },
-    { duration: '30s', target: 0 },
+    { duration: '30s', target: 200 }, // Ramping up to Silver (200)
+    { duration: '1m',  target: 500 }, // Ramping up to Gold (500)
+    { duration: '30s', target: 0   }, // Cool down
   ],
   thresholds: {
-    http_req_duration: ['p(95)<5000'],
-    errors: ['rate<0.1'],
+    http_req_duration: ['p(95)<500'], // Needs to be FAST (under 500ms)
+    errors: ['rate<0.002'],           // Needs to be STABLE (under 0.2%)
   },
 };
 
@@ -57,7 +57,11 @@ export function handleSummary(data) {
   console.log(`Error Rate:     ${errPct.toFixed(2)}%`);
   console.log('========================================');
 
-  if (vus >= 50 && errPct < 10) {
+  if (vus >= 500 && errPct < 0.2) {
+    console.log('🥇 GOLD TIER ACHIEVED!');
+  } else if (vus >= 200 && errPct < 1.0) {
+    console.log('🥈 SILVER TIER ACHIEVED!');
+  } else if (vus >= 50 && errPct < 10) {
     console.log('🥉 BRONZE TIER ACHIEVED!');
   } else {
     console.log('❌ Tier requirements not met');

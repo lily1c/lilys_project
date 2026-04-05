@@ -62,7 +62,7 @@ def shorten():
     if existing:
         edata = model_to_dict(existing)
         edata['short_url'] = f"{request.scheme}://{request.host}/{existing.short_code}"
-        return jsonify(edata), 200
+        return jsonify(edata), 201
 
     for attempt in range(10):
         short_code = generate_short_code()

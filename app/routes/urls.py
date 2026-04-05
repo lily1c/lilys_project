@@ -137,6 +137,14 @@ def update_url(url_id):
         if not isinstance(data['is_active'], bool):
             return jsonify({'error': 'Invalid type for is_active'}), 400
         url_obj.is_active = data['is_active']
+        # The Slumbering Guide: clear cache when deactivating
+        if not data['is_active']:
+            cache = get_cache()
+            if cache:
+                try:
+                    cache.delete(f"url:{url_obj.short_code}")
+                except Exception:
+                    pass
     if 'original_url' in data:
         if not isinstance(data['original_url'], str):
             return jsonify({'error': 'Invalid type for original_url'}), 400
@@ -149,6 +157,16 @@ def update_url(url_id):
 def delete_url(url_id):
     try:
         url_obj = URL.get_by_id(url_id)
+        # Clean up cache
+        cache = get_cache()
+        if cache:
+            try:
+                cache.delete(f"url:{url_obj.short_code}")
+            except Exception:
+                pass
+        # Clean up associated events
+        from app.models.event import Event
+        Event.delete().where(Event.url_id == url_id).execute()
         url_obj.delete_instance()
     except DoesNotExist:
         pass

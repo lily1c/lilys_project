@@ -86,18 +86,28 @@ def create_event():
     if len(data['event_type']) > 50:
         return jsonify({'error': 'Event type too long (max 50)'}), 400
     details = data.get('details')
-    if details is not None and not (isinstance(details, dict) or isinstance(details, str)):
-        return jsonify({'error': 'Details must be a dict or string'}), 400
-    if isinstance(details, dict):
-        details = json.dumps(details)
+    if details is not None:
+        if isinstance(details, dict):
+            details = json.dumps(details)
+        elif isinstance(details, str):
+            pass  # strings are fine
+        else:
+            return jsonify({'error': 'Invalid data type for details'}), 400
     url_id = data.get('url_id')
     user_id = data.get('user_id')
-    if url_id is not None and not isinstance(url_id, int):
-        return jsonify({'error': 'url_id must be integer'}), 400
-    if user_id is not None and not isinstance(user_id, int):
-        return jsonify({'error': 'user_id must be integer'}), 400
+    if url_id is not None:
+        if not isinstance(url_id, int):
+            return jsonify({'error': 'url_id must be integer'}), 400
+    if user_id is not None:
+        if not isinstance(user_id, int):
+            return jsonify({'error': 'user_id must be integer'}), 400
+    # Validate timestamp if provided
+    timestamp_val = data.get('timestamp')
     import datetime
-    timestamp = data.get('timestamp') or datetime.datetime.now()
+    if timestamp_val is not None:
+        if not isinstance(timestamp_val, str):
+            return jsonify({'error': 'Invalid data type for timestamp'}), 400
+    timestamp = timestamp_val or datetime.datetime.now()
     try:
         event = Event.create(
             url_id=url_id,

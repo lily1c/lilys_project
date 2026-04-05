@@ -161,6 +161,7 @@ def update_url(url_id):
             return jsonify({'error': 'Invalid type for original_url'}), 400
         url_obj.original_url = data['original_url']
         
+    url_obj.updated_at = datetime.datetime.now(datetime.timezone.utc)
     url_obj.save()
     return jsonify(model_to_dict(url_obj))
 

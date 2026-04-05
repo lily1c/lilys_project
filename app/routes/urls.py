@@ -212,6 +212,7 @@ def redirect_url(short_code):
             if cached_val:
                 url_data = json.loads(cached_val)
                 # Check is_active from cache (Challenge #5)
+                # "Leave no footprint behind": Return 404 BEFORE calling Event.create()
                 if not url_data.get('is_active', True):
                     return jsonify({'error': 'URL not found'}), 404
                 
@@ -228,9 +229,10 @@ def redirect_url(short_code):
                 }
                 
                 # Success! Someone took note of the traveler.
+                # CAST cached ID to strict integer (Challenge #4 requirement)
                 Event.create(
-                    url_id=url_data['id'],
-                    user_id=url_data.get('user_id'),
+                    url_id=int(url_data['id']),
+                    user_id=int(url_data['user_id']) if url_data.get('user_id') else None,
                     event_type='redirect',
                     details=json.dumps(details),
                     timestamp=datetime.datetime.now(datetime.timezone.utc)

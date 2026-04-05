@@ -1,9 +1,5 @@
 import pytest
 from app import create_app
-from app.database import db
-from app.models.user import User
-from app.models.url import URL
-from app.models.event import Event
 
 @pytest.fixture
 def app():

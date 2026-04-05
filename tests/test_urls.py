@@ -1,4 +1,3 @@
-import pytest
 import json
 
 def test_shorten_url(client):

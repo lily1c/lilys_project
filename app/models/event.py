@@ -1,5 +1,5 @@
 import datetime
-from peewee import CharField, IntegerField, DateTimeField, TextField, SQL
+from peewee import CharField, IntegerField, DateTimeField, TextField
 from app.database import BaseModel
 
 class Event(BaseModel):

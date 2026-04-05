@@ -13,9 +13,9 @@ db = PostgresqlDatabase(
     port=int(os.getenv('DATABASE_PORT', 5432))
 )
 
-from app.models.user import User
-from app.models.url import URL
-from app.models.event import Event
+from app.models.user import User  # noqa: E402
+from app.models.url import URL  # noqa: E402
+from app.models.event import Event  # noqa: E402
 
 User._meta.database = db
 URL._meta.database = db

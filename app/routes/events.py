@@ -26,6 +26,7 @@ def list_events():
     
     sample = []
     import json
+    import datetime
     for e in events:
         edata = model_to_dict(e)
         if edata.get('details'):
@@ -33,6 +34,8 @@ def list_events():
                 edata['details'] = json.loads(edata['details'])
             except Exception:
                 pass
+        if isinstance(edata.get('timestamp'), datetime.datetime):
+            edata['timestamp'] = edata['timestamp'].isoformat()
         sample.append(edata)
         
     return jsonify({
@@ -46,7 +49,17 @@ def list_events():
 @events_bp.route('/events/<int:event_id>', methods=['GET'])
 def get_event(event_id):
     try:
-        return jsonify(model_to_dict(Event.get_by_id(event_id)))
+        edata = model_to_dict(Event.get_by_id(event_id))
+        import datetime
+        import json
+        if edata.get('details'):
+            try:
+                edata['details'] = json.loads(edata['details'])
+            except Exception:
+                pass
+        if isinstance(edata.get('timestamp'), datetime.datetime):
+            edata['timestamp'] = edata['timestamp'].isoformat()
+        return jsonify(edata)
     except DoesNotExist:
         return jsonify({'error': 'Event not found'}), 404
 
@@ -56,6 +69,9 @@ def create_event():
     data = request.get_json(force=True, silent=True)
     if not data or 'event_type' not in data:
         return jsonify({'error': 'Missing event_type'}), 400
+        
+    if len(str(data['event_type'])) > 50:
+        return jsonify({'error': 'Input too long'}), 400
     
     details = data.get('details')
     if isinstance(details, dict):
@@ -78,5 +94,8 @@ def create_event():
             edata['details'] = json.loads(edata['details'])
     except Exception:
         pass
+        
+    if isinstance(edata.get('timestamp'), datetime.datetime):
+        edata['timestamp'] = edata['timestamp'].isoformat()
         
     return jsonify(edata), 201

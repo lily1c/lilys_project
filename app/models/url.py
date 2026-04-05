@@ -1,4 +1,4 @@
-from peewee import CharField, ForeignKeyField, BooleanField, DateTimeField, IntegerField, SQL
+from peewee import CharField, BooleanField, DateTimeField, IntegerField, SQL
 from app.database import BaseModel
 
 class URL(BaseModel):

@@ -29,8 +29,8 @@ def metrics():
 @urls_bp.route('/shorten', methods=['POST'])
 def shorten():
     data = request.get_json(force=True, silent=True)
-    if not data or not isinstance(data, dict):
-        return jsonify({'error': 'No data provided or invalid format'}), 400
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
         
     original_url = data.get('url') or data.get('original_url')
     user_id = data.get('user_id')
@@ -119,7 +119,7 @@ def update_url(url_id):
         return jsonify({'error': 'URL not found'}), 404
         
     data = request.get_json(force=True, silent=True)
-    if not data or not isinstance(data, dict):
+    if data is None:
         return jsonify({'error': 'Malformed JSON'}), 400
 
     if 'title' in data:
@@ -160,23 +160,26 @@ def stats(short_code):
 def redirect_url(short_code):
     from app.models.event import Event
     cache = get_cache()
+    original_url = None
+    
+    if cache:
+        try:
+            original_url = cache.get(f"url:{short_code}")
+        except Exception:
+            pass
+
     try:
         url_obj = None
-        if cache:
-            # We check cache for the object or its status
-            # But more simply, we always fetch from DB for the status to be 100% safe
-            # OR we store status in cache. Let's ensure we fetch the object.
-            try:
-                url_obj = URL.get(URL.short_code == short_code)
-            except DoesNotExist:
-                return jsonify({'error': 'URL not found'}), 404
+        if not original_url:
+            url_obj = URL.get(URL.short_code == short_code)
+            original_url = url_obj.original_url
+            if cache:
+                cache.set(f"url:{short_code}", original_url, ex=3600)
         else:
             url_obj = URL.get(URL.short_code == short_code)
 
         if not url_obj.is_active:
             return jsonify({'error': 'URL de-activated'}), 410
-
-        original_url = url_obj.original_url
 
         import json
         details = {
@@ -192,7 +195,7 @@ def redirect_url(short_code):
             user_id=url_obj.user_id,
             event_type='redirect',
             details=json.dumps(details),
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime.now(datetime.timezone.utc) # Using UTC to avoid timezone mismatches
         )
 
         return redirect(original_url, code=302)

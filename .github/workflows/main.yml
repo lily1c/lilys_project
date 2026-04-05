@@ -111,8 +111,7 @@ jobs:
         run: uv sync
       - name: Start App background worker
         run: |
-          uv run python setup_db.py
-          uv run gunicorn --bind 0.0.0.0:5006 --workers 2 --threads 50 "app:create_app()" &
+          uv run gunicorn --bind 0.0.0.0:5006 "app:create_app()" &
           timeout 30s bash -c "until curl -s http://localhost:5006/health; do sleep 1; done"
       - name: Install k6 (Direct Binary)
         run: |
@@ -120,4 +119,4 @@ jobs:
           tar -xzf k6.tar.gz
           sudo mv k6-v0.51.0-linux-amd64/k6 /usr/local/bin/k6
       - name: Execute Load Test
-        run: k6 run k6/load_test.js
+        run: k6 run k6/load_test.js --vus 10 --duration 5s

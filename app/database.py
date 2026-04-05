@@ -23,8 +23,11 @@ def init_db(app):
     )
     db.initialize(database)
     
+    from app.models.user import User
+    from app.models.url import URL
+    from app.models.event import Event
     
-    # Table creation is handled by setup_db.py in CI to prevent race conditions
+    db.create_tables([User, URL, Event], safe=True)
 
     @app.before_request
     def _db_connect():

@@ -56,44 +56,48 @@ def shorten():
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'Unsupported URL format'}), 400
 
-    # The Twin's Paradox: every creation gets its own unique short code
-    for attempt in range(10):
+    # The Twin's Paradox: Avoid identical reflections (Challenge #4)
+    while True:
         short_code = generate_short_code()
-        try:
-            url_obj = URL.create(
-                short_code=short_code,
-                original_url=original_url,
-                user_id=user_id,
-                title=title
-            )
-            cache = get_cache()
-            if cache:
-                import json as _json
-                cache_data = _json.dumps({
-                    'id': url_obj.id,
-                    'original_url': url_obj.original_url,
-                    'user_id': url_obj.user_id,
-                    'is_active': url_obj.is_active
-                })
-                cache.set(f"url:{url_obj.short_code}", cache_data, ex=3600)
-
-            # The Unseen Observer: log every creation
+        # Ensure it is 100% unique before attempting to save
+        existing = URL.get_or_none(URL.short_code == short_code)
+        if not existing:
+            break
+            
+    try:
+        url_obj = URL.create(
+            short_code=short_code,
+            original_url=original_url,
+            user_id=user_id,
+            title=title
+        )
+        cache = get_cache()
+        if cache:
             import json as _json
-            from app.models.event import Event
-            Event.create(
-                url_id=url_obj.id,
-                user_id=user_id,
-                event_type='created',
-                details=_json.dumps({'short_code': url_obj.short_code, 'original_url': original_url}),
-                timestamp=datetime.datetime.now(datetime.timezone.utc)
-            )
+            cache_data = _json.dumps({
+                'id': url_obj.id,
+                'original_url': url_obj.original_url,
+                'user_id': url_obj.user_id,
+                'is_active': url_obj.is_active
+            })
+            cache.set(f"url:{url_obj.short_code}", cache_data, ex=3600)
 
-            edata = model_to_dict(url_obj)
-            edata['short_url'] = f"{request.scheme}://{request.host}/{url_obj.short_code}"
-            return jsonify(edata), 201
-        except IntegrityError:
-            continue
-    return jsonify({'error': 'Could not generate unique code'}), 500
+        # The Unseen Observer: log every creation
+        import json as _json
+        from app.models.event import Event
+        Event.create(
+            url_id=url_obj.id,
+            user_id=user_id,
+            event_type='created',
+            details=_json.dumps({'short_code': url_obj.short_code, 'original_url': original_url}),
+            timestamp=datetime.datetime.now(datetime.timezone.utc)
+        )
+
+        edata = model_to_dict(url_obj)
+        edata['short_url'] = f"{request.scheme}://{request.host}/{url_obj.short_code}"
+        return jsonify(edata), 201
+    except IntegrityError:
+        return jsonify({'error': 'Unexpected database collision during creation'}), 500
 
 @urls_bp.route('/urls', methods=['GET'])
 def list_urls():

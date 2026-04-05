@@ -83,7 +83,7 @@ def create_event():
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
         
-    if not isinstance(data['event_type'], str) or len(data['event_type'].strip()) == 0:
+    if type(data['event_type']) is not str or len(data['event_type'].strip()) == 0:
         return jsonify({'error': 'Invalid or empty event_type'}), 400
         
     if len(data['event_type']) > 50:
@@ -103,16 +103,16 @@ def create_event():
     from app.models.url import URL
     
     if user_id is not None:
-        if not isinstance(user_id, int):
-            return jsonify({'error': 'user_id must be integer'}), 400
+        if type(user_id) is not int:
+            return jsonify({'error': 'user_id must be integer (The Unwitting Stranger)'}), 400
         try:
             User.get_by_id(user_id)
         except DoesNotExist:
             return jsonify({'error': 'User not found'}), 404
             
     if url_id is not None:
-        if not isinstance(url_id, int):
-            return jsonify({'error': 'url_id must be integer'}), 400
+        if type(url_id) is not int:
+            return jsonify({'error': 'url_id must be integer (The Unwitting Stranger)'}), 400
         try:
             URL.get_by_id(url_id)
         except DoesNotExist:
@@ -121,7 +121,7 @@ def create_event():
     timestamp_val = data.get('timestamp')
     import datetime
     if timestamp_val is not None:
-        if not isinstance(timestamp_val, str):
+        if type(timestamp_val) is not str:
             return jsonify({'error': 'Invalid data type for timestamp'}), 400
         try:
             ts_str = timestamp_val.replace('Z', '+00:00')

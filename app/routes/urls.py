@@ -40,14 +40,20 @@ def shorten():
     if not original_url:
         return jsonify({'error': 'Missing url field'}), 400
         
-    if not isinstance(original_url, str):
-        return jsonify({'error': 'Invalid data type for original_url'}), 400
+    if type(original_url) is not str:
+        return jsonify({'error': 'Invalid data type for original_url (expected string)'}), 400
         
-    if title is not None and not isinstance(title, str):
-        return jsonify({'error': 'Invalid data type for title'}), 400
+    if title is not None and type(title) is not str:
+        return jsonify({'error': 'Invalid data type for title (expected string)'}), 400
 
-    if user_id is not None and not isinstance(user_id, int):
-        return jsonify({'error': 'Invalid data type for user_id'}), 400
+    if user_id is not None:
+        if type(user_id) is not int:
+            return jsonify({'error': 'Invalid data type for user_id (expected int)'}), 400
+        from app.models.user import User
+        try:
+            User.get_by_id(user_id)
+        except DoesNotExist:
+            return jsonify({'error': 'User not found (Deceitful Scroll)'}), 404
     
     # The Deceitful Scroll & Unwitting Stranger: Stricter validation
     if len(original_url) > 2048 or (title and len(title) > 255):

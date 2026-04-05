@@ -111,6 +111,7 @@ jobs:
         run: uv sync
       - name: Start App background worker
         run: |
+          uv run python setup_db.py
           uv run gunicorn --bind 0.0.0.0:5006 --workers 2 --threads 50 "app:create_app()" &
           timeout 30s bash -c "until curl -s http://localhost:5006/health; do sleep 1; done"
       - name: Install k6 (Direct Binary)

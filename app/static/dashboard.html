@@ -6,584 +6,434 @@
 <title>snip.it — URL Shortener Dashboard</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0A0A0B;--surface:#141416;--surface-h:#1C1C1F;
-  --border:#2A2A2E;--border-l:#3A3A3F;
-  --text:#E8E6E3;--muted:#8A8A8F;--dim:#5A5A5F;
-  --accent:#E8FF5A;--accent-d:#C4D94C;
-  --danger:#FF5A5A;--success:#5AFF8A;--info:#5AC8FF;--purple:#B48AFF;
-}
+:root{--bg:#0A0A0B;--surface:#141416;--surface-h:#1C1C1F;--border:#2A2A2E;--border-l:#3A3A3F;--text:#E8E6E3;--muted:#8A8A8F;--dim:#5A5A5F;--accent:#E8FF5A;--accent-d:#C4D94C;--danger:#FF5A5A;--success:#5AFF8A;--info:#5AC8FF;--purple:#B48AFF}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased}
 ::selection{background:#E8FF5A40;color:var(--accent)}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 input::placeholder{color:var(--dim)}
 a{color:var(--accent);text-decoration:none}
-
 .mono{font-family:'JetBrains Mono',monospace}
-.shell{max-width:840px;margin:0 auto;padding:40px 20px 80px}
-
-/* Header */
+.shell{max-width:860px;margin:0 auto;padding:40px 20px 80px}
 .header{display:flex;align-items:center;gap:14px;margin-bottom:36px}
 .logo-box{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#E8FF5A88);display:flex;align-items:center;justify-content:center}
 .logo-box svg{width:20px;height:20px}
 .logo-title{font-size:22px;font-weight:800;letter-spacing:-0.03em}
 .logo-title span{color:var(--accent)}
 .logo-sub{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em;text-transform:uppercase}
-
-/* Nav */
-.nav{display:flex;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:32px}
-.nav button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0;border-radius:8px;border:none;background:transparent;color:var(--muted);font-size:13px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s}
+.nav{display:flex;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:32px;flex-wrap:wrap}
+.nav button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0;border-radius:8px;border:none;background:transparent;color:var(--muted);font-size:13px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;min-width:90px}
 .nav button.active{background:#E8FF5A15;color:var(--accent);font-weight:600}
 .nav button:hover:not(.active){color:var(--text)}
-
-/* Cards */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
 .stats-row{display:flex;gap:14px;flex-wrap:wrap}
-.stat{flex:1;min-width:160px}
-.stat .icon-box{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center}
-.stat-val{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-0.02em}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
-
-/* Badges */
+.stat{flex:1;min-width:130px;display:flex;align-items:center;gap:16px}
+.stat .ib{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sv{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-0.02em}
+.sl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.02em;text-transform:uppercase}
-
-/* Inputs */
-.input-wrap{position:relative}
-.input-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dim)}
-.inp{width:100%;padding:11px 14px 11px 40px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .2s}
+.inp{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .2s}
 .inp:focus{border-color:var(--accent)}
-.inp-plain{padding-left:14px}
-
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.02em;cursor:pointer;transition:all .15s;border:none}
+.inp-icon{padding-left:40px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:all .15s;border:none}
 .btn-primary{background:var(--accent);color:var(--bg);font-weight:700}
 .btn-primary:hover{background:var(--accent-d)}
 .btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{border-color:var(--border-l)}
 .btn-danger{background:#FF5A5A20;color:var(--danger);border:1px solid #FF5A5A40}
-.btn-ghost{background:transparent;color:var(--muted);padding:6px 10px}
+.btn-ghost{background:transparent;color:var(--muted);padding:6px 10px;border:none}
 .btn-ghost:hover{color:var(--text)}
 .btn-sm{padding:6px 14px;font-size:12px}
-.btn-lg{padding:13px 28px;font-size:14px}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
-
-/* Row items */
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .row-item{display:flex;align-items:center;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;gap:14px;transition:border-color .2s}
 .row-item:hover{border-color:var(--border-l)}
 .dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
 .avatar{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:700}
-
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:460px;animation:modalIn .2s ease}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .modal-head h3{font-size:18px;font-weight:700}
-
-/* Detail panel */
 .detail{padding:0 18px 16px;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
-/* Pagination */
 .pagination{display:flex;justify-content:center;gap:8px;margin-top:20px;align-items:center}
 .page-info{padding:6px 14px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
-
-/* Empty */
 .empty{padding:60px;text-align:center}
-.empty-icon{width:56px;height:56px;border-radius:16px;background:#E8FF5A10;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px}
 .empty h4{font-size:16px;font-weight:600;margin-bottom:6px}
 .empty p{font-size:13px;color:var(--muted);max-width:280px;margin:0 auto}
-
-/* Toast */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{padding:12px 20px;border-radius:8px;font-size:13px;cursor:pointer;max-width:340px;animation:slideIn .3s ease;font-family:'JetBrains Mono',monospace}
 .toast-info{background:var(--surface);border:1px solid var(--border);color:var(--text)}
 .toast-success{background:#1a3a1a;border:1px solid #2a5a2a;color:var(--success)}
 .toast-error{background:var(--danger);border:1px solid #CC4848;color:#fff}
-
-/* Animations */
-@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes modalIn{from{transform:scale(0.95);opacity:0}to{transform:scale(1);opacity:1}}
-
-/* Sections hidden by default */
-.tab-content{display:none}
-.tab-content.active{display:block}
-
-/* Select */
+.tab-content{display:none}.tab-content.active{display:block}
 select{padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;cursor:pointer}
-select option{background:var(--bg);color:var(--text)}
-
-.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
 .section-head h2{font-size:22px;font-weight:700}
 .section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .head-actions{display:flex;gap:10px}
 .list{display:flex;flex-direction:column;gap:6px}
 .mb-16{margin-bottom:16px}
-
-/* Expand/collapse */
-.expandable{cursor:pointer}
-.expand-body{display:none;overflow:hidden}
-.expand-body.open{display:block}
 pre.json{margin:0;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all}
+.tier-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+.tier-card{flex:1;min-width:170px;border-radius:12px;padding:18px 20px;border:1px solid}
+.tier-card h4{font-size:14px;font-weight:700;margin-bottom:8px}
+.tier-card ul{list-style:none;padding:0;font-size:12px;line-height:2}
+.tier-card li::before{content:'✓ ';font-weight:700}
+.shorten-hero{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px}
+.shorten-row{display:flex;gap:10px}
+.shorten-row .inp{flex:1;font-size:15px;padding:14px}
+.shorten-row .btn{padding:14px 28px;font-size:14px}
+.shorten-result{margin-top:16px;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;display:none}
+.shorten-result.show{display:block;animation:slideIn .3s ease}
+.short-link{font-size:18px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;word-break:break-all}
+.short-link a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.arch-box{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);white-space:pre;overflow-x:auto;line-height:1.6;padding:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-top:16px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.input-wrap{position:relative}
+.input-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dim)}
+/* Test runner */
+.test-row{display:flex;align-items:center;padding:12px 18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;gap:12px;transition:all .3s}
+.test-row.pass{border-color:#2a5a2a}
+.test-row.fail{border-color:#5a2a2a}
+.test-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.test-icon.pending{background:var(--border);color:var(--dim)}
+.test-icon.running{background:#E8FF5A20;color:var(--accent);animation:pulse 1s infinite}
+.test-icon.pass{background:#1a3a1a;color:var(--success)}
+.test-icon.fail{background:#3a1a1a;color:var(--danger)}
+.test-name{font-size:13px;font-weight:600;flex:1}
+.test-detail{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.test-time{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;min-width:50px;text-align:right}
 </style>
 </head>
 <body>
 <div class="shell">
-  <!-- Header -->
   <div class="header">
-    <div class="logo-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-    </div>
-    <div>
-      <div class="logo-title">snip<span>.</span>it</div>
-      <div class="logo-sub">url shortener dashboard</div>
-    </div>
+    <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
+    <div><div class="logo-title">snip<span>.</span>it</div><div class="logo-sub">url shortener — scalability quest</div></div>
   </div>
 
-  <!-- Nav -->
-  <div class="nav" id="nav">
-    <button class="active" data-tab="dashboard" onclick="switchTab('dashboard')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Dashboard
-    </button>
-    <button data-tab="urls" onclick="switchTab('urls')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      URLs
-    </button>
-    <button data-tab="users" onclick="switchTab('users')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Users
-    </button>
-    <button data-tab="events" onclick="switchTab('events')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Events
-    </button>
+  <div class="nav">
+    <button class="active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Overview</button>
+    <button data-tab="shorten" onclick="switchTab('shorten')">✂️ Shorten</button>
+    <button data-tab="urls" onclick="switchTab('urls')">🔗 URLs</button>
+    <button data-tab="users" onclick="switchTab('users')">👥 Users</button>
+    <button data-tab="events" onclick="switchTab('events')">⚡ Events</button>
   </div>
 
-  <!-- ═══════ DASHBOARD TAB ═══════ -->
+  <!-- DASHBOARD -->
   <div class="tab-content active" id="tab-dashboard">
-    <div style="margin-bottom:28px">
-      <h2 style="font-size:22px;font-weight:700">Overview</h2>
-      <p style="margin:6px 0 0;color:var(--muted);font-size:13px">System metrics at a glance</p>
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">System Overview</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Live metrics from the API</p>
+    <div class="stats-row">
+      <div class="card stat"><div class="ib" style="background:#E8FF5A15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div><div class="sv" id="stat-urls">…</div><div class="sl">URLs</div></div></div>
+      <div class="card stat"><div class="ib" style="background:#5AC8FF15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="sv" id="stat-users">…</div><div class="sl">Users</div></div></div>
+      <div class="card stat"><div class="ib" style="background:#B48AFF15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="sv" id="stat-events">…</div><div class="sl">Events</div></div></div>
+      <div class="card stat"><div class="ib" style="background:#5AFF8A15"><div class="live-dot"></div></div><div><div class="sv" id="stat-health" style="font-size:16px">…</div><div class="sl">API</div></div></div>
     </div>
-    <div class="stats-row" id="stats-row">
-      <div class="card stat" style="display:flex;align-items:center;gap:16px">
-        <div class="icon-box" style="background:#E8FF5A15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-        <div><div class="stat-val" id="stat-urls">…</div><div class="stat-label">Total URLs</div></div>
+
+    <!-- LIVE TEST RUNNER -->
+    <div style="margin-top:32px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:18px;font-weight:700">Scalability Quest Tests</div>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">Hit real API endpoints to verify each tier requirement</p>
       </div>
-      <div class="card stat" style="display:flex;align-items:center;gap:16px">
-        <div class="icon-box" style="background:#5AC8FF15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-        <div><div class="stat-val" id="stat-users">…</div><div class="stat-label">Total Users</div></div>
-      </div>
-      <div class="card stat" style="display:flex;align-items:center;gap:16px">
-        <div class="icon-box" style="background:#B48AFF15"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div><div class="stat-val" id="stat-events">…</div><div class="stat-label">Total Events</div></div>
-      </div>
+      <button class="btn btn-primary" id="run-tests-btn" onclick="runAllTests()">▶ Run All Tests</button>
     </div>
-    <div class="card" style="margin-top:28px">
-      <div style="font-size:14px;font-weight:600;margin-bottom:16px">Stack</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <span class="badge" style="color:var(--success);background:#5AFF8A18">● API healthy</span>
-        <span class="badge" style="color:var(--info);background:#5AC8FF18">Flask + Peewee</span>
-        <span class="badge" style="color:var(--purple);background:#B48AFF18">PostgreSQL</span>
-        <span class="badge" style="color:var(--accent);background:#E8FF5A18">Redis cache</span>
-        <span class="badge" style="color:var(--muted);background:#8A8A8F18">Nginx LB</span>
+    <div style="margin-top:16px;font-size:13px;color:var(--dim)" id="test-summary"></div>
+
+    <!-- Bronze tests -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:20px">🥉</span>
+        <span style="font-size:15px;font-weight:700;color:#EFAA27">Bronze</span>
+        <span class="mono" style="font-size:11px;color:var(--dim)" id="bronze-count"></span>
       </div>
+      <div class="list" id="bronze-tests"></div>
     </div>
+
+    <!-- Silver tests -->
+    <div style="margin-top:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:20px">🥈</span>
+        <span style="font-size:15px;font-weight:700;color:#1D9E75">Silver</span>
+        <span class="mono" style="font-size:11px;color:var(--dim)" id="silver-count"></span>
+      </div>
+      <div class="list" id="silver-tests"></div>
+    </div>
+
+    <!-- Gold tests -->
+    <div style="margin-top:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:20px">🥇</span>
+        <span style="font-size:15px;font-weight:700;color:#B48AFF">Gold</span>
+        <span class="mono" style="font-size:11px;color:var(--dim)" id="gold-count"></span>
+      </div>
+      <div class="list" id="gold-tests"></div>
+    </div>
+
+    <!-- Recent activity -->
+    <div style="margin-top:32px;font-size:16px;font-weight:700">Recent Activity <span class="live-dot" style="margin-left:8px"></span></div>
+    <div class="list" id="recent-events" style="margin-top:12px"></div>
   </div>
 
-  <!-- ═══════ URLS TAB ═══════ -->
+  <!-- SHORTEN -->
+  <div class="tab-content" id="tab-shorten">
+    <div class="shorten-hero">
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">Shorten a URL</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Each submission creates a unique short code and logs a "created" event.</p>
+      <div class="shorten-row">
+        <input class="inp" id="hero-url" placeholder="https://example.com/your-long-url">
+        <button class="btn btn-primary" onclick="heroShorten()" id="hero-btn">✂️ Shorten</button>
+      </div>
+      <div class="shorten-result" id="hero-result">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Your short URL</div>
+        <div class="short-link" id="hero-link"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="copyHeroLink()">📋 Copy</button>
+          <button class="btn btn-secondary btn-sm" onclick="testRedirect()">🔗 Test redirect</button>
+          <span class="mono" style="font-size:11px;color:var(--dim)" id="hero-meta"></span>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:12px">Session Events <span class="live-dot" style="margin-left:8px"></span></div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Events created during this session appear here in real-time.</p>
+    <div class="list" id="session-events"></div>
+  </div>
+
+  <!-- URLS -->
   <div class="tab-content" id="tab-urls">
-    <div class="section-head">
-      <div>
-        <h2>Shortened URLs</h2>
-        <p id="urls-count">Loading…</p>
-      </div>
-      <div class="head-actions">
-        <button class="btn btn-secondary btn-sm" onclick="loadUrls()">↻</button>
-        <button class="btn btn-primary" onclick="openModal('url-modal')">+ Shorten</button>
-      </div>
-    </div>
-    <div class="mb-16">
-      <div class="input-wrap">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="inp" id="url-search" placeholder="Filter URLs…" oninput="renderUrls()">
-      </div>
-    </div>
+    <div class="section-head"><div><h2>Shortened URLs</h2><p id="urls-count">Loading…</p></div><div class="head-actions"><button class="btn btn-secondary btn-sm" onclick="loadUrls()">↻</button><button class="btn btn-primary" onclick="openModal('url-modal')">+ Shorten</button></div></div>
+    <div class="mb-16"><div class="input-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inp inp-icon" id="url-search" placeholder="Filter URLs…" oninput="renderUrls()"></div></div>
     <div class="list" id="urls-list"></div>
   </div>
 
-  <!-- ═══════ USERS TAB ═══════ -->
+  <!-- USERS -->
   <div class="tab-content" id="tab-users">
-    <div class="section-head">
-      <div>
-        <h2>Users</h2>
-        <p id="users-count">Loading…</p>
-      </div>
-      <div class="head-actions">
-        <button class="btn btn-secondary btn-sm" onclick="loadUsers()">↻</button>
-        <button class="btn btn-primary" onclick="openModal('user-modal')">+ Add User</button>
-      </div>
-    </div>
-    <div class="mb-16">
-      <div class="input-wrap">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="inp" id="user-search" placeholder="Filter users…" oninput="renderUsers()">
-      </div>
-    </div>
+    <div class="section-head"><div><h2>Users</h2><p id="users-count">Loading…</p></div><div class="head-actions"><button class="btn btn-secondary btn-sm" onclick="loadUsers()">↻</button><button class="btn btn-primary" onclick="openModal('user-modal')">+ Add User</button></div></div>
+    <div class="mb-16"><div class="input-wrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inp inp-icon" id="user-search" placeholder="Filter users…" oninput="renderUsers()"></div></div>
     <div class="list" id="users-list"></div>
     <div class="pagination" id="users-pagination"></div>
   </div>
 
-  <!-- ═══════ EVENTS TAB ═══════ -->
+  <!-- EVENTS -->
   <div class="tab-content" id="tab-events">
-    <div class="section-head">
-      <div>
-        <h2>Events</h2>
-        <p id="events-count">Loading…</p>
-      </div>
-      <div class="head-actions">
-        <select id="event-type-filter" onchange="eventsPage=1;loadEvents()">
-          <option value="">All types</option>
-          <option value="redirect">Redirect</option>
-          <option value="created">Created</option>
-        </select>
-        <button class="btn btn-secondary btn-sm" onclick="loadEvents()">↻</button>
-      </div>
-    </div>
+    <div class="section-head"><div><h2>Event Log</h2><p id="events-count">Loading…</p></div><div class="head-actions"><select id="event-type-filter" onchange="eventsPage=1;loadEvents()"><option value="">All types</option><option value="redirect">Redirect</option><option value="created">Created</option></select><button class="btn btn-secondary btn-sm" onclick="loadEvents()">↻</button></div></div>
     <div class="list" id="events-list"></div>
     <div class="pagination" id="events-pagination"></div>
   </div>
 </div>
 
-<!-- ═══════ URL MODAL ═══════ -->
-<div class="modal-bg" id="url-modal" style="display:none" onclick="closeModal('url-modal')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-head"><h3>Shorten a URL</h3><button class="btn-ghost" onclick="closeModal('url-modal')">✕</button></div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <input class="inp inp-plain" id="new-url" placeholder="https://example.com/long-url">
-      <input class="inp inp-plain" id="new-title" placeholder="Title (optional)">
-      <input class="inp inp-plain" id="new-url-user" placeholder="User ID (optional)">
-      <button class="btn btn-primary btn-lg" style="justify-content:center" id="shorten-btn" onclick="createUrl()">✂ Shorten URL</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════ USER MODAL ═══════ -->
-<div class="modal-bg" id="user-modal" style="display:none" onclick="closeModal('user-modal')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-head"><h3>Create User</h3><button class="btn-ghost" onclick="closeModal('user-modal')">✕</button></div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <input class="inp inp-plain" id="new-username" placeholder="Username">
-      <input class="inp inp-plain" id="new-email" placeholder="Email">
-      <button class="btn btn-primary btn-lg" style="justify-content:center" id="create-user-btn" onclick="createUser()">+ Create User</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════ TOASTS ═══════ -->
+<!-- Modals -->
+<div class="modal-bg" id="url-modal" style="display:none" onclick="closeModal('url-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3>Shorten a URL</h3><button class="btn-ghost" onclick="closeModal('url-modal')">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><input class="inp" id="new-url" placeholder="https://example.com/long-url"><input class="inp" id="new-title" placeholder="Title (optional)"><input class="inp" id="new-url-user" placeholder="User ID (optional)"><button class="btn btn-primary" style="justify-content:center;padding:13px 28px" onclick="createUrl()">✂️ Shorten URL</button></div></div></div>
+<div class="modal-bg" id="user-modal" style="display:none" onclick="closeModal('user-modal')"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h3>Create User</h3><button class="btn-ghost" onclick="closeModal('user-modal')">✕</button></div><div style="display:flex;flex-direction:column;gap:12px"><input class="inp" id="new-username" placeholder="Username"><input class="inp" id="new-email" placeholder="Email"><button class="btn btn-primary" style="justify-content:center;padding:13px 28px" onclick="createUser()">+ Create User</button></div></div></div>
 <div class="toast-container" id="toasts"></div>
 
 <script>
-// ─── State ──────────────────────────────────────────────
-let allUrls = [];
-let allUsers = [];
-let usersPage = 1, usersTotal = 0, usersPerPage = 20;
-let eventsPage = 1, eventsTotal = 0, eventsPerPage = 25;
-let expandedUrl = null;
-let expandedEvent = null;
+var allUrls=[],allUsers=[],sessionEvents=[];
+var usersPage=1,usersTotal=0,usersPerPage=20;
+var eventsPage=1,eventsTotal=0,eventsPerPage=25;
+var expandedUrl=null,expandedEvent=null,lastHeroResult=null;
 
-// ─── Helpers ────────────────────────────────────────────
-function truncate(s, n) { return s && s.length > (n||45) ? s.slice(0, n||45) + '…' : s||''; }
-function timeAgo(d) {
-  if (!d) return '—';
-  const ms = Date.now() - new Date(d).getTime();
-  const m = Math.floor(ms/60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return m + 'm ago';
-  const h = Math.floor(m/60);
-  if (h < 24) return h + 'h ago';
-  const dy = Math.floor(h/24);
-  if (dy < 30) return dy + 'd ago';
-  return new Date(d).toLocaleDateString();
+function truncate(s,n){return s&&s.length>(n||45)?s.slice(0,n||45)+'…':s||''}
+function timeAgo(d){if(!d)return'—';var ms=Date.now()-new Date(d).getTime(),m=Math.floor(ms/60000);if(m<1)return'just now';if(m<60)return m+'m ago';var h=Math.floor(m/60);if(h<24)return h+'h ago';var dy=Math.floor(h/24);return dy<30?dy+'d ago':new Date(d).toLocaleDateString()}
+async function api(path,opts){opts=opts||{};opts.headers=Object.assign({'Content-Type':'application/json'},opts.headers||{});var res=await fetch(path,opts);if(opts.method==='DELETE'&&res.status===204)return null;var data=await res.json();if(!res.ok)throw new Error(data.error||'Request failed');return data}
+function toast(msg,type){var el=document.createElement('div');el.className='toast toast-'+(type||'info');el.textContent=msg;el.onclick=function(){el.remove()};document.getElementById('toasts').appendChild(el);setTimeout(function(){el.remove()},3500)}
+function openModal(id){document.getElementById(id).style.display='flex'}
+function closeModal(id){document.getElementById(id).style.display='none'}
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function switchTab(tab){document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});document.querySelectorAll('.nav button').forEach(function(el){el.classList.remove('active')});document.getElementById('tab-'+tab).classList.add('active');document.querySelector('.nav button[data-tab="'+tab+'"]').classList.add('active');if(tab==='urls'&&allUrls.length===0)loadUrls();if(tab==='users'&&allUsers.length===0)loadUsers();if(tab==='events')loadEvents()}
+
+// Dashboard
+async function loadDashboard(){
+  try{var m=await api('/metrics');document.getElementById('stat-urls').textContent=m.total_urls||0;document.getElementById('stat-users').textContent=m.total_users||0}catch(e){document.getElementById('stat-health').textContent='OFFLINE';document.getElementById('stat-health').style.color='var(--danger)';toast('Cannot reach API','error');return}
+  try{var ev=await api('/events?per_page=1');document.getElementById('stat-events').textContent=ev.total_items||0}catch(e){}
+  document.getElementById('stat-health').textContent='HEALTHY';document.getElementById('stat-health').style.color='var(--success)';
+  try{var recent=await api('/events?per_page=8');var list=document.getElementById('recent-events');var evts=recent.sample||[];if(evts.length===0){list.innerHTML='<div style="padding:30px;text-align:center;color:var(--muted)">No events yet</div>';return}list.innerHTML=evts.map(function(ev){var colors={redirect:'var(--info)',created:'var(--success)'};var c=colors[ev.event_type]||'var(--muted)';return'<div class="row-item" style="padding:10px 16px"><span style="color:'+c+'">⚡</span><span class="badge" style="color:'+c+';background:'+c+'18">'+ev.event_type+'</span>'+(ev.url_id?'<span class="mono" style="font-size:11px;color:var(--dim)">url:'+ev.url_id+'</span>':'')+'<span style="flex:1"></span><span style="font-size:11px;color:var(--dim)">'+timeAgo(ev.timestamp)+'</span></div>'}).join('')}catch(e){}
 }
 
-async function api(path, opts) {
-  opts = opts || {};
-  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
-  const res = await fetch(path, opts);
-  if (opts.method === 'DELETE' && res.status === 204) return null;
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
-}
+// Hero shortener
+async function heroShorten(){var url=document.getElementById('hero-url').value.trim();if(!url)return;document.getElementById('hero-btn').disabled=true;document.getElementById('hero-btn').textContent='Shortening…';try{var data=await api('/shorten',{method:'POST',body:JSON.stringify({url:url})});lastHeroResult=data;var shortUrl=location.origin+'/'+data.short_code;document.getElementById('hero-link').innerHTML='<a href="'+shortUrl+'" target="_blank">'+shortUrl+'</a>';document.getElementById('hero-meta').textContent='ID: '+data.id+' · Code: '+data.short_code;document.getElementById('hero-result').classList.add('show');sessionEvents.unshift({type:'created',code:data.short_code,url:url,time:new Date().toISOString()});renderSessionEvents();toast('URL shortened!','success')}catch(e){toast(e.message,'error')}document.getElementById('hero-btn').disabled=false;document.getElementById('hero-btn').textContent='✂️ Shorten'}
+function copyHeroLink(){if(!lastHeroResult)return;navigator.clipboard.writeText(location.origin+'/'+lastHeroResult.short_code);toast('Copied!','success')}
+async function testRedirect(){if(!lastHeroResult)return;var code=lastHeroResult.short_code;toast('Opening /'+code+' in new tab…','info');window.open(location.origin+'/'+code,'_blank');setTimeout(async function(){try{var evts=await api('/events?url_id='+lastHeroResult.id+'&event_type=redirect&per_page=5');var count=(evts.sample||[]).length;sessionEvents.unshift({type:'redirect',code:code,url:lastHeroResult.original_url,time:new Date().toISOString()});renderSessionEvents();toast(count+' redirect event(s) logged!','success')}catch(e){}},2000)}
+function renderSessionEvents(){var list=document.getElementById('session-events');if(sessionEvents.length===0){list.innerHTML='<div style="padding:30px;text-align:center;color:var(--muted)">Shorten a URL above to see events here</div>';return}list.innerHTML=sessionEvents.map(function(ev){var c=ev.type==='created'?'var(--success)':'var(--info)';return'<div class="row-item" style="padding:10px 16px;animation:slideIn .3s ease"><span style="color:'+c+'">⚡</span><span class="badge" style="color:'+c+';background:'+c+'18">'+ev.type+'</span><span class="mono" style="font-size:12px;color:var(--accent)">/'+ev.code+'</span><span style="flex:1"></span><span style="font-size:11px;color:var(--dim)">'+timeAgo(ev.time)+'</span></div>'}).join('')}
 
-function toast(msg, type) {
-  type = type || 'info';
-  const el = document.createElement('div');
-  el.className = 'toast toast-' + type;
-  el.textContent = msg;
-  el.onclick = function(){ el.remove(); };
-  document.getElementById('toasts').appendChild(el);
-  setTimeout(function(){ el.remove(); }, 3500);
-}
+// URLs
+async function loadUrls(){document.getElementById('urls-list').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';try{var data=await api('/urls');allUrls=data.sample||[];document.getElementById('urls-count').textContent=allUrls.length+' total links';renderUrls()}catch(e){toast(e.message,'error')}}
+function renderUrls(){var q=(document.getElementById('url-search').value||'').toLowerCase();var filtered=allUrls.filter(function(u){return(u.original_url||'').toLowerCase().includes(q)||(u.short_code||'').toLowerCase().includes(q)||(u.title||'').toLowerCase().includes(q)});var list=document.getElementById('urls-list');if(filtered.length===0){list.innerHTML='<div class="empty"><h4>No URLs found</h4><p>Create your first shortened URL</p></div>';return}list.innerHTML=filtered.slice(0,50).map(function(u){var ex=expandedUrl===u.id;return'<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--surface)"><div style="display:flex;align-items:center;padding:14px 18px;gap:14px;cursor:pointer" onclick="toggleUrlExpand('+u.id+')"><div class="dot" style="background:'+(u.is_active?'var(--success)':'var(--danger)')+'"></div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span class="mono" style="font-size:14px;font-weight:600;color:var(--accent)">'+u.short_code+'</span>'+(u.title?'<span style="font-size:13px;color:var(--muted)">— '+truncate(u.title,30)+'</span>':'')+'</div><div class="mono" style="font-size:12px;color:var(--dim);margin-top:3px">'+truncate(u.original_url,55)+'</div></div><button class="btn-ghost" onclick="event.stopPropagation();copyCode(\''+u.short_code+'\')">📋</button><span style="font-size:14px;color:var(--dim)">'+(ex?'▲':'▼')+'</span></div>'+(ex?'<div class="detail"><span class="badge" style="color:var(--muted);background:#8A8A8F18">ID: '+u.id+'</span>'+(u.user_id?'<span class="badge" style="color:var(--info);background:#5AC8FF18">User #'+u.user_id+'</span>':'')+'<span class="badge" style="color:'+(u.is_active?'var(--success)':'var(--danger)')+';background:'+(u.is_active?'#5AFF8A18':'#FF5A5A18')+'">'+(u.is_active?'Active':'Inactive')+'</span><div style="flex:1"></div><button class="btn btn-ghost btn-sm" onclick="toggleActive('+u.id+','+u.is_active+')">'+(u.is_active?'⏸ Deactivate':'▶ Activate')+'</button><button class="btn btn-danger btn-sm" onclick="deleteUrl('+u.id+')">🗑</button></div>':'')+'</div>'}).join('')}
+function toggleUrlExpand(id){expandedUrl=expandedUrl===id?null:id;renderUrls()}
+function copyCode(code){navigator.clipboard.writeText(location.origin+'/'+code);toast('Short URL copied!','success')}
+async function createUrl(){var url=document.getElementById('new-url').value;if(!url)return;var body={url:url};var title=document.getElementById('new-title').value;var uid=document.getElementById('new-url-user').value;if(title)body.title=title;if(uid)body.user_id=parseInt(uid);try{await api('/shorten',{method:'POST',body:JSON.stringify(body)});toast('URL shortened!','success');document.getElementById('new-url').value='';document.getElementById('new-title').value='';document.getElementById('new-url-user').value='';closeModal('url-modal');loadUrls()}catch(e){toast(e.message,'error')}}
+async function toggleActive(id,current){try{await api('/urls/'+id,{method:'PUT',body:JSON.stringify({is_active:!current})});toast('URL '+(current?'deactivated':'activated'),'success');loadUrls()}catch(e){toast(e.message,'error')}}
+async function deleteUrl(id){try{await api('/urls/'+id,{method:'DELETE'});toast('URL deleted','success');loadUrls()}catch(e){toast(e.message,'error')}}
 
-function openModal(id){ document.getElementById(id).style.display = 'flex'; }
-function closeModal(id){ document.getElementById(id).style.display = 'none'; }
+// Users
+async function loadUsers(){document.getElementById('users-list').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';try{var data=await api('/users?page='+usersPage+'&per_page='+usersPerPage);allUsers=data.sample||[];usersTotal=data.total_items||0;document.getElementById('users-count').textContent=usersTotal+' registered';renderUsers();renderUsersPagination()}catch(e){toast(e.message,'error')}}
+function renderUsers(){var q=(document.getElementById('user-search').value||'').toLowerCase();var filtered=allUsers.filter(function(u){return(u.username||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)});var list=document.getElementById('users-list');if(filtered.length===0){list.innerHTML='<div class="empty"><h4>No users found</h4><p>Create your first user</p></div>';return}list.innerHTML=filtered.map(function(u){return'<div class="row-item"><div class="avatar" style="background:#E8FF5A15;color:var(--accent)">'+(u.username||'?')[0].toUpperCase()+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'+u.username+'</div><div class="mono" style="font-size:12px;color:var(--muted)">'+u.email+'</div></div><span class="badge" style="color:var(--dim);background:#5A5A5F18">#'+u.id+'</span><span style="font-size:11px;color:var(--dim)">'+timeAgo(u.created_at)+'</span><button class="btn-ghost" onclick="deleteUser('+u.id+')" style="color:var(--danger)">🗑</button></div>'}).join('')}
+function renderUsersPagination(){var tp=Math.ceil(usersTotal/usersPerPage);if(tp<=1){document.getElementById('users-pagination').innerHTML='';return}document.getElementById('users-pagination').innerHTML='<button class="btn btn-secondary btn-sm" '+(usersPage<=1?'disabled':'')+' onclick="usersPage--;loadUsers()">← Prev</button><span class="page-info">'+usersPage+' / '+tp+'</span><button class="btn btn-secondary btn-sm" '+(usersPage>=tp?'disabled':'')+' onclick="usersPage++;loadUsers()">Next →</button>'}
+async function createUser(){var un=document.getElementById('new-username').value,em=document.getElementById('new-email').value;if(!un||!em)return;try{await api('/users',{method:'POST',body:JSON.stringify({username:un,email:em})});toast('User created!','success');document.getElementById('new-username').value='';document.getElementById('new-email').value='';closeModal('user-modal');loadUsers()}catch(e){toast(e.message,'error')}}
+async function deleteUser(id){try{await api('/users/'+id,{method:'DELETE'});toast('User deleted','success');loadUsers()}catch(e){toast(e.message,'error')}}
 
-// ─── Tab switching ──────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
-  document.querySelectorAll('.nav button').forEach(function(el){ el.classList.remove('active'); });
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.querySelector('.nav button[data-tab="'+tab+'"]').classList.add('active');
-  if (tab === 'urls' && allUrls.length === 0) loadUrls();
-  if (tab === 'users' && allUsers.length === 0) loadUsers();
-  if (tab === 'events') loadEvents();
-}
+// Events
+async function loadEvents(){document.getElementById('events-list').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';var tf=document.getElementById('event-type-filter').value;var path='/events?page='+eventsPage+'&per_page='+eventsPerPage;if(tf)path+='&event_type='+tf;try{var data=await api(path);var events=data.sample||[];eventsTotal=data.total_items||0;document.getElementById('events-count').textContent=eventsTotal+' tracked events';renderEvents(events);renderEventsPagination()}catch(e){toast(e.message,'error')}}
+var tc={redirect:'var(--info)',created:'var(--success)',updated:'var(--accent)',deleted:'var(--danger)'};
+function renderEvents(events){var list=document.getElementById('events-list');if(events.length===0){list.innerHTML='<div class="empty"><h4>No events yet</h4><p>Events appear as URLs are created and accessed</p></div>';return}list.innerHTML=events.map(function(ev){var c=tc[ev.event_type]||'var(--muted)';var ex=expandedEvent===ev.id;var ds='';if(ev.details){try{ds=typeof ev.details==='object'?JSON.stringify(ev.details,null,2):ev.details}catch(e){ds=String(ev.details)}}return'<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--surface)"><div style="display:flex;align-items:center;padding:12px 18px;gap:12px;cursor:pointer" onclick="toggleEventExpand('+ev.id+')"><span style="color:'+c+'">⚡</span><span class="badge" style="color:'+c+';background:'+c+'18">'+ev.event_type+'</span><div style="flex:1;display:flex;gap:12px;align-items:center">'+(ev.url_id?'<span class="mono" style="font-size:12px;color:var(--dim)">url:'+ev.url_id+'</span>':'')+(ev.user_id?'<span class="mono" style="font-size:12px;color:var(--dim)">user:'+ev.user_id+'</span>':'')+'</div><span style="font-size:11px;color:var(--dim)">'+timeAgo(ev.timestamp)+'</span>'+(ev.details?'<span style="font-size:14px;color:var(--dim)">'+(ex?'▲':'▼')+'</span>':'')+'</div>'+(ex&&ds?'<div style="padding:0 18px 14px;border-top:1px solid var(--border);padding-top:12px"><pre class="json">'+escapeHtml(ds)+'</pre></div>':'')+'</div>'}).join('')}
+function toggleEventExpand(id){expandedEvent=expandedEvent===id?null:id;loadEvents()}
+function renderEventsPagination(){var tp=Math.ceil(eventsTotal/eventsPerPage);if(tp<=1){document.getElementById('events-pagination').innerHTML='';return}document.getElementById('events-pagination').innerHTML='<button class="btn btn-secondary btn-sm" '+(eventsPage<=1?'disabled':'')+' onclick="eventsPage--;loadEvents()">← Prev</button><span class="page-info">'+eventsPage+' / '+tp+'</span><button class="btn btn-secondary btn-sm" '+(eventsPage>=tp?'disabled':'')+' onclick="eventsPage++;loadEvents()">Next →</button>'}
 
-// ─── Dashboard ──────────────────────────────────────────
-async function loadDashboard() {
-  try {
-    const [metrics, ev] = await Promise.all([api('/metrics'), api('/events?per_page=1')]);
-    document.getElementById('stat-urls').textContent = metrics.total_urls || 0;
-    document.getElementById('stat-users').textContent = metrics.total_users || 0;
-    document.getElementById('stat-events').textContent = ev.total_items || 0;
-  } catch(e) {
-    toast('Cannot reach API — is the server running?', 'error');
-  }
-}
+loadDashboard();renderSessionEvents();renderTestUI();
 
-// ─── URLs ───────────────────────────────────────────────
-async function loadUrls() {
-  document.getElementById('urls-list').innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';
-  try {
-    const data = await api('/urls');
-    allUrls = data.sample || [];
-    document.getElementById('urls-count').textContent = allUrls.length + ' total links';
-    renderUrls();
-  } catch(e) { toast(e.message, 'error'); }
-}
+// ─── TEST RUNNER ────────────────────────────────────────
+var testDefs = {
+  bronze: [
+    { id:'b1', name:'Health check', desc:'GET /health returns ok', run: async function(){
+      var d=await api('/health'); if(d.status!=='ok') throw new Error('Expected ok'); return 'status: ok';
+    }},
+    { id:'b2', name:'Create user', desc:'POST /users with valid data', run: async function(){
+      var ts=Date.now();var d=await api('/users',{method:'POST',body:JSON.stringify({username:'test_'+ts,email:'test_'+ts+'@test.com'})});
+      if(!d.id) throw new Error('No id returned'); return 'id: '+d.id;
+    }},
+    { id:'b3', name:'Create short URL', desc:'POST /shorten with valid URL', run: async function(){
+      var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/test_'+Date.now()})});
+      if(!d.short_code) throw new Error('No short_code'); return d.short_code;
+    }},
+    { id:'b4', name:'Reject invalid URL', desc:'POST /shorten with bad format', run: async function(){
+      var res=await fetch('/shorten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:'not-a-url'})});
+      if(res.status!==400) throw new Error('Expected 400, got '+res.status); return 'rejected (400)';
+    }},
+    { id:'b5', name:'Reject long input', desc:'POST /users with username > 50 chars', run: async function(){
+      var res=await fetch('/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'a'.repeat(100),email:'x@x.com'})});
+      if(res.status!==400) throw new Error('Expected 400, got '+res.status); return 'rejected (400)';
+    }},
+    { id:'b6', name:'Reject malformed JSON', desc:'POST /shorten with array body', run: async function(){
+      var res=await fetch('/shorten',{method:'POST',headers:{'Content-Type':'application/json'},body:'[1,2,3]'});
+      if(res.status!==400) throw new Error('Expected 400, got '+res.status); return 'rejected (400)';
+    }},
+    { id:'b7', name:'Seed data loaded', desc:'GET /metrics shows data', run: async function(){
+      var d=await api('/metrics'); if(d.total_urls<1 && d.total_users<1) throw new Error('No data'); return d.total_urls+' urls, '+d.total_users+' users';
+    }},
+  ],
+  silver: [
+    { id:'s1', name:'Response time < 200ms', desc:'GET /health latency', run: async function(){
+      var t=performance.now();await api('/health');var ms=Math.round(performance.now()-t);
+      if(ms>200) throw new Error(ms+'ms > 200ms'); return ms+'ms';
+    }},
+    { id:'s2', name:'URL caching works', desc:'Second redirect is faster', run: async function(){
+      var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/cache_'+Date.now()})});
+      var t1=performance.now();await fetch('/'+d.short_code,{redirect:'manual'});var ms1=Math.round(performance.now()-t1);
+      var t2=performance.now();await fetch('/'+d.short_code,{redirect:'manual'});var ms2=Math.round(performance.now()-t2);
+      return 'first: '+ms1+'ms, cached: '+ms2+'ms';
+    }},
+    { id:'s3', name:'Pagination works', desc:'GET /users?page=1&per_page=5', run: async function(){
+      var d=await api('/users?page=1&per_page=5');if(!d.sample||!d.total_items) throw new Error('Missing pagination fields');
+      if(d.sample.length>5) throw new Error('Returned more than per_page'); return d.sample.length+' of '+d.total_items;
+    }},
+    { id:'s4', name:'Event filtering', desc:'GET /events?event_type=created', run: async function(){
+      var d=await api('/events?event_type=created&per_page=3');if(!d.sample) throw new Error('No results');
+      var allCreated=d.sample.every(function(e){return e.event_type==='created'});
+      if(!allCreated) throw new Error('Wrong types returned'); return d.total_items+' created events';
+    }},
+  ],
+  gold: [
+    { id:'g1', name:"Twin's Paradox", desc:'Same URL → different short codes', run: async function(){
+      var url='https://example.com/twin_'+Date.now();
+      var d1=await api('/shorten',{method:'POST',body:JSON.stringify({url:url})});
+      var d2=await api('/shorten',{method:'POST',body:JSON.stringify({url:url})});
+      if(d1.short_code===d2.short_code) throw new Error('Same code: '+d1.short_code);
+      return d1.short_code+' ≠ '+d2.short_code;
+    }},
+    { id:'g2', name:'Unseen Observer', desc:'Redirect logs an event', run: async function(){
+      var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/observe_'+Date.now()})});
+      await fetch('/'+d.short_code,{redirect:'manual'});
+      await new Promise(function(r){setTimeout(r,500)});
+      var ev=await api('/events?url_id='+d.id+'&event_type=redirect');
+      if(!ev.sample||ev.sample.length===0) throw new Error('No redirect event'); return 'event logged (id:'+ev.sample[0].id+')';
+    }},
+    { id:'g3', name:'Slumbering Guide', desc:'Deactivated URL blocks redirect', run: async function(){
+      var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/sleep_'+Date.now()})});
+      await api('/urls/'+d.id,{method:'PUT',body:JSON.stringify({is_active:false})});
+      var res=await fetch('/'+d.short_code,{redirect:'manual'});
+      if(res.status!==410) throw new Error('Expected 410, got '+res.status);
+      await new Promise(function(r){setTimeout(r,300)});
+      var ev=await api('/events?url_id='+d.id+'&event_type=redirect');
+      if(ev.sample&&ev.sample.length>0) throw new Error('Event logged for inactive URL');
+      return 'blocked (410), no event';
+    }},
+    { id:'g4', name:'Creation event logged', desc:'POST /shorten creates a "created" event', run: async function(){
+      var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/cevt_'+Date.now()})});
+      await new Promise(function(r){setTimeout(r,300)});
+      var ev=await api('/events?url_id='+d.id+'&event_type=created');
+      if(!ev.sample||ev.sample.length===0) throw new Error('No created event'); return 'event logged';
+    }},
+    { id:'g5', name:'Reject empty strings', desc:'POST /events with empty event_type', run: async function(){
+      var res=await fetch('/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_type:''})});
+      if(res.status!==400) throw new Error('Expected 400, got '+res.status); return 'rejected (400)';
+    }},
+    { id:'g6', name:'Cascade delete', desc:'DELETE user removes their URLs', run: async function(){
+      var ts=Date.now();
+      var u=await api('/users',{method:'POST',body:JSON.stringify({username:'del_'+ts,email:'del_'+ts+'@t.com'})});
+      var url=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/del_'+ts,user_id:u.id})});
+      await api('/users/'+u.id,{method:'DELETE'});
+      var res=await fetch('/urls/'+url.id);var data=await res.json();
+      if(res.status!==404) throw new Error('URL still exists after user delete'); return 'user+urls cleaned';
+    }},
+  ]
+};
 
-function renderUrls() {
-  const q = (document.getElementById('url-search').value || '').toLowerCase();
-  const filtered = allUrls.filter(function(u){
-    return (u.original_url||'').toLowerCase().includes(q) ||
-           (u.short_code||'').toLowerCase().includes(q) ||
-           (u.title||'').toLowerCase().includes(q);
+var testResults={};
+
+function renderTestUI(){
+  ['bronze','silver','gold'].forEach(function(tier){
+    var list=document.getElementById(tier+'-tests');
+    list.innerHTML=testDefs[tier].map(function(t){
+      var r=testResults[t.id];
+      var state=r?r.state:'pending';
+      var icon=state==='pass'?'✓':state==='fail'?'✗':state==='running'?'…':'○';
+      return '<div class="test-row '+(state==='pass'||state==='fail'?state:'')+'" id="test-'+t.id+'">'
+        +'<div class="test-icon '+state+'">'+icon+'</div>'
+        +'<div class="test-name">'+t.name+'<div style="font-size:11px;font-weight:400;color:var(--dim);margin-top:2px">'+t.desc+'</div></div>'
+        +'<div class="test-detail">'+(r&&r.detail?r.detail:'')+'</div>'
+        +'<div class="test-time">'+(r&&r.ms?r.ms+'ms':'')+'</div>'
+        +'</div>';
+    }).join('');
+    // Update count
+    var passed=testDefs[tier].filter(function(t){return testResults[t.id]&&testResults[t.id].state==='pass'}).length;
+    var total=testDefs[tier].length;
+    var el=document.getElementById(tier+'-count');
+    if(passed>0) el.textContent=passed+'/'+total+' passed';
   });
-  const list = document.getElementById('urls-list');
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h4>No URLs found</h4><p>Create your first shortened URL</p></div>';
-    return;
+  // Summary
+  var allTests=[].concat(testDefs.bronze,testDefs.silver,testDefs.gold);
+  var totalPassed=allTests.filter(function(t){return testResults[t.id]&&testResults[t.id].state==='pass'}).length;
+  var totalTests=allTests.length;
+  var el=document.getElementById('test-summary');
+  if(totalPassed>0){
+    var tier=totalPassed===totalTests?'🥇 GOLD':totalPassed>=(testDefs.bronze.length+testDefs.silver.length)?'🥈 SILVER':totalPassed>=testDefs.bronze.length?'🥉 BRONZE':'';
+    el.innerHTML='<span style="color:var(--success)">'+totalPassed+'/'+totalTests+' passed</span>'+(tier?' — '+tier:'');
   }
-  list.innerHTML = filtered.slice(0, 50).map(function(u){
-    var expanded = expandedUrl === u.id;
-    return '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--surface)">' +
-      '<div class="expandable" style="display:flex;align-items:center;padding:14px 18px;gap:14px" onclick="toggleUrlExpand('+u.id+')">' +
-        '<div class="dot" style="background:'+(u.is_active?'var(--success)':'var(--danger)')+'"></div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="display:flex;align-items:center;gap:8px">' +
-            '<span class="mono" style="font-size:14px;font-weight:600;color:var(--accent)">'+u.short_code+'</span>' +
-            (u.title ? '<span style="font-size:13px;color:var(--muted)">— '+truncate(u.title,30)+'</span>' : '') +
-          '</div>' +
-          '<div class="mono" style="font-size:12px;color:var(--dim);margin-top:3px">'+truncate(u.original_url,55)+'</div>' +
-        '</div>' +
-        '<button class="btn-ghost" onclick="event.stopPropagation();copyCode(\''+u.short_code+'\')" title="Copy short URL">📋</button>' +
-        '<span style="font-size:14px;color:var(--dim)">'+(expanded?'▲':'▼')+'</span>' +
-      '</div>' +
-      (expanded ?
-        '<div class="detail">' +
-          '<span class="badge" style="color:var(--muted);background:#8A8A8F18">ID: '+u.id+'</span>' +
-          (u.user_id ? '<span class="badge" style="color:var(--info);background:#5AC8FF18">User #'+u.user_id+'</span>' : '') +
-          '<span class="badge" style="color:'+(u.is_active?'var(--success)':'var(--danger)')+';background:'+(u.is_active?'#5AFF8A18':'#FF5A5A18')+'">'+(u.is_active?'Active':'Inactive')+'</span>' +
-          '<div style="flex:1"></div>' +
-          '<button class="btn btn-ghost btn-sm" onclick="toggleActive('+u.id+','+u.is_active+')">'+(u.is_active?'⏸ Deactivate':'▶ Activate')+'</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="deleteUrl('+u.id+')">🗑</button>' +
-        '</div>' : '') +
-    '</div>';
-  }).join('');
 }
 
-function toggleUrlExpand(id) {
-  expandedUrl = expandedUrl === id ? null : id;
-  renderUrls();
-}
-
-function copyCode(code) {
-  navigator.clipboard.writeText(location.origin + '/' + code);
-  toast('Short URL copied!', 'success');
-}
-
-async function createUrl() {
-  var url = document.getElementById('new-url').value;
-  if (!url) return;
-  var body = { url: url };
-  var title = document.getElementById('new-title').value;
-  var uid = document.getElementById('new-url-user').value;
-  if (title) body.title = title;
-  if (uid) body.user_id = parseInt(uid);
-  try {
-    await api('/shorten', { method:'POST', body: JSON.stringify(body) });
-    toast('URL shortened!', 'success');
-    document.getElementById('new-url').value = '';
-    document.getElementById('new-title').value = '';
-    document.getElementById('new-url-user').value = '';
-    closeModal('url-modal');
-    loadUrls();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function toggleActive(id, current) {
-  try {
-    await api('/urls/'+id, { method:'PUT', body: JSON.stringify({ is_active: !current }) });
-    toast('URL ' + (current ? 'deactivated' : 'activated'), 'success');
-    loadUrls();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function deleteUrl(id) {
-  try {
-    await api('/urls/'+id, { method:'DELETE' });
-    toast('URL deleted', 'success');
-    loadUrls();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ─── Users ──────────────────────────────────────────────
-async function loadUsers() {
-  document.getElementById('users-list').innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';
-  try {
-    const data = await api('/users?page='+usersPage+'&per_page='+usersPerPage);
-    allUsers = data.sample || [];
-    usersTotal = data.total_items || 0;
-    document.getElementById('users-count').textContent = usersTotal + ' registered';
-    renderUsers();
-    renderUsersPagination();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-function renderUsers() {
-  var q = (document.getElementById('user-search').value || '').toLowerCase();
-  var filtered = allUsers.filter(function(u){
-    return (u.username||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
-  });
-  var list = document.getElementById('users-list');
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h4>No users found</h4><p>Create your first user</p></div>';
-    return;
-  }
-  list.innerHTML = filtered.map(function(u){
-    return '<div class="row-item">' +
-      '<div class="avatar" style="background:#E8FF5A15;color:var(--accent)">'+(u.username||'?')[0].toUpperCase()+'</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:14px;font-weight:600">'+u.username+'</div>' +
-        '<div class="mono" style="font-size:12px;color:var(--muted)">'+u.email+'</div>' +
-      '</div>' +
-      '<span class="badge" style="color:var(--dim);background:#5A5A5F18">#'+u.id+'</span>' +
-      '<span style="font-size:11px;color:var(--dim)">'+timeAgo(u.created_at)+'</span>' +
-      '<button class="btn-ghost" onclick="deleteUser('+u.id+')" style="color:var(--danger)">🗑</button>' +
-    '</div>';
-  }).join('');
-}
-
-function renderUsersPagination() {
-  var totalPages = Math.ceil(usersTotal / usersPerPage);
-  if (totalPages <= 1) { document.getElementById('users-pagination').innerHTML = ''; return; }
-  document.getElementById('users-pagination').innerHTML =
-    '<button class="btn btn-secondary btn-sm" '+(usersPage<=1?'disabled':'')+' onclick="usersPage--;loadUsers()">← Prev</button>' +
-    '<span class="page-info">'+usersPage+' / '+totalPages+'</span>' +
-    '<button class="btn btn-secondary btn-sm" '+(usersPage>=totalPages?'disabled':'')+' onclick="usersPage++;loadUsers()">Next →</button>';
-}
-
-async function createUser() {
-  var un = document.getElementById('new-username').value;
-  var em = document.getElementById('new-email').value;
-  if (!un || !em) return;
-  try {
-    await api('/users', { method:'POST', body: JSON.stringify({ username: un, email: em }) });
-    toast('User created!', 'success');
-    document.getElementById('new-username').value = '';
-    document.getElementById('new-email').value = '';
-    closeModal('user-modal');
-    loadUsers();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function deleteUser(id) {
-  try {
-    await api('/users/'+id, { method:'DELETE' });
-    toast('User deleted', 'success');
-    loadUsers();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ─── Events ─────────────────────────────────────────────
-async function loadEvents() {
-  document.getElementById('events-list').innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Loading…</div>';
-  var typeFilter = document.getElementById('event-type-filter').value;
-  var path = '/events?page='+eventsPage+'&per_page='+eventsPerPage;
-  if (typeFilter) path += '&event_type='+typeFilter;
-  try {
-    var data = await api(path);
-    var events = data.sample || [];
-    eventsTotal = data.total_items || 0;
-    document.getElementById('events-count').textContent = eventsTotal + ' tracked events';
-    renderEvents(events);
-    renderEventsPagination();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-var typeColors = { redirect: 'var(--info)', created: 'var(--success)', updated: 'var(--accent)', deleted: 'var(--danger)' };
-
-function renderEvents(events) {
-  var list = document.getElementById('events-list');
-  if (events.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h4>No events yet</h4><p>Events appear as URLs are created and accessed</p></div>';
-    return;
-  }
-  list.innerHTML = events.map(function(ev){
-    var color = typeColors[ev.event_type] || 'var(--muted)';
-    var expanded = expandedEvent === ev.id;
-    var detailStr = '';
-    if (ev.details) {
-      try { detailStr = typeof ev.details === 'object' ? JSON.stringify(ev.details, null, 2) : ev.details; } catch(e){ detailStr = String(ev.details); }
+async function runAllTests(){
+  var btn=document.getElementById('run-tests-btn');
+  btn.disabled=true;btn.textContent='Running…';
+  testResults={};renderTestUI();
+  var allTests=[].concat(testDefs.bronze,testDefs.silver,testDefs.gold);
+  for(var i=0;i<allTests.length;i++){
+    var t=allTests[i];
+    testResults[t.id]={state:'running',detail:'',ms:''};renderTestUI();
+    var start=performance.now();
+    try{
+      var detail=await t.run();
+      var ms=Math.round(performance.now()-start);
+      testResults[t.id]={state:'pass',detail:detail,ms:ms};
+    }catch(e){
+      var ms=Math.round(performance.now()-start);
+      testResults[t.id]={state:'fail',detail:e.message,ms:ms};
     }
-    return '<div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--surface)">' +
-      '<div class="expandable" style="display:flex;align-items:center;padding:12px 18px;gap:12px" onclick="toggleEventExpand('+ev.id+')">' +
-        '<span style="color:'+color+'">⚡</span>' +
-        '<span class="badge" style="color:'+color+';background:'+color+'18">'+ev.event_type+'</span>' +
-        '<div style="flex:1;display:flex;gap:12px;align-items:center">' +
-          (ev.url_id ? '<span class="mono" style="font-size:12px;color:var(--dim)">url:'+ev.url_id+'</span>' : '') +
-          (ev.user_id ? '<span class="mono" style="font-size:12px;color:var(--dim)">user:'+ev.user_id+'</span>' : '') +
-        '</div>' +
-        '<span style="font-size:11px;color:var(--dim)">'+timeAgo(ev.timestamp)+'</span>' +
-        (ev.details ? '<span style="font-size:14px;color:var(--dim)">'+(expanded?'▲':'▼')+'</span>' : '') +
-      '</div>' +
-      (expanded && detailStr ?
-        '<div style="padding:0 18px 14px;border-top:1px solid var(--border);padding-top:12px"><pre class="json">'+escapeHtml(detailStr)+'</pre></div>' : '') +
-    '</div>';
-  }).join('');
+    renderTestUI();
+  }
+  btn.disabled=false;btn.textContent='▶ Run All Tests';
 }
-
-function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-function toggleEventExpand(id) {
-  expandedEvent = expandedEvent === id ? null : id;
-  loadEvents();
-}
-
-function renderEventsPagination() {
-  var totalPages = Math.ceil(eventsTotal / eventsPerPage);
-  if (totalPages <= 1) { document.getElementById('events-pagination').innerHTML = ''; return; }
-  document.getElementById('events-pagination').innerHTML =
-    '<button class="btn btn-secondary btn-sm" '+(eventsPage<=1?'disabled':'')+' onclick="eventsPage--;loadEvents()">← Prev</button>' +
-    '<span class="page-info">'+eventsPage+' / '+totalPages+'</span>' +
-    '<button class="btn btn-secondary btn-sm" '+(eventsPage>=totalPages?'disabled':'')+' onclick="eventsPage++;loadEvents()">Next →</button>';
-}
-
-// ─── Boot ───────────────────────────────────────────────
-loadDashboard();
 </script>
 </body>
 </html>

@@ -1,153 +1,117 @@
 
-# 🚀 Scalability Quest - URL Shortener
+# snip.it — URL Shortener
 
-A scalable URL shortener API built for the MLH PE Hackathon - Scalability Engineering Quest.
+A scalable URL shortener with a live dashboard, built for the MLH PE Hackathon Scalability Quest (Gold Tier).
 
-## Tech Stack
-
-- Backend: Python/Flask, Peewee ORM
-- Database: PostgreSQL
-- Caching: Redis
-- Load Balancer: Nginx
-- Containerization: Docker Compose
-- Load Testing: k6
-
-## Features
-
-- ✅ URL shortening with unique codes
-- ✅ User management (CRUD)
-- ✅ Event tracking
-- ✅ Health check endpoint
-- ✅ Metrics endpoint
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| GET | `/metrics` | App metrics |
-| POST | `/shorten` | Create short URL |
-| GET | `/<short_code>` | Redirect to original URL |
-| GET | `/stats/<short_code>` | Get URL statistics |
-| GET | `/users` | List users (paginated) |
-| GET | `/users/<id>` | Get user by ID |
-| POST | `/users` | Create user |
-| PUT | `/users/<id>` | Update user |
-| DELETE | `/users/<id>` | Delete user |
-| GET | `/events` | List events |
+```
+                         ┌──────────────────┐
+                         │    Nginx (LB)     │
+                         └──┬─────┬─────┬───┘
+                            │     │     │
+                        ┌───▼┐ ┌──▼─┐ ┌─▼──┐
+                        │App1│ │App2│ │App3│  ← 3× Flask/Gunicorn
+                        └─┬──┘ └─┬──┘ └─┬──┘
+                          │      │      │
+                    ┌─────▼──┐ ┌─▼──────▼─┐
+                    │Postgres│ │   Redis   │
+                    └────────┘ └──────────┘
+```
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.11+
-- PostgreSQL
-- uv (Python package manager)
-
-### Setup
-
+### Local (no Docker)
 ```bash
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
-
-# Clone and install
 git clone https://github.com/lily1c/lilys_project.git
 cd lilys_project
-uv sync
-
-# Create database
-createdb hackathon_db
-
-# Configure environment
-cp .env.example .env
-# Edit .env: set DATABASE_USER to your Mac username, DATABASE_PASSWORD empty
-
-# Load seed data
-uv run setup_db.py
-
-# Run server
-uv run flask run --port 5005
+pip install flask peewee python-dotenv psycopg2-binary redis
+cp .env.example .env        # Edit DATABASE_USER to your Mac username
+python setup_db.py           # Creates tables + loads 400 users, 2000 URLs, 3422 events
+python run.py                # http://localhost:5000/dashboard
 ```
 
-### Test
+> **macOS note:** Port 5000 may be taken by AirPlay. Turn it off in System Settings → General → AirDrop & Handoff, or run on a different port with `python -c "from app import create_app; app = create_app(); app.run(port=5005)"`.
 
+### Docker (full stack)
 ```bash
-curl http://localhost:5005/health
-curl http://localhost:5005/users/1
-curl -X POST http://localhost:5005/shorten \
+cp .env.example .env
+docker-compose up -d --build   # Starts 6 containers
+# http://localhost:5006/dashboard
+```
+
+## What It Does
+
+**Shorten URLs** — `POST /shorten` generates an 8-character code. Visiting that code redirects to the original URL.
+
+**Track analytics** — Every redirect logs the visitor's IP, browser, platform, referrer, and timestamp.
+
+**Manage users** — Full CRUD with pagination, bulk CSV import, and cascade deletes.
+
+**Live dashboard** — A single-file frontend at `/dashboard` that talks to the same API. No build step, no separate server.
+
+## API
+
+| Method | Endpoint | What it does |
+|--------|----------|-------------|
+| `POST` | `/shorten` | Shorten a URL → returns `{short_code}` |
+| `GET` | `/<code>` | Redirect to original URL |
+| `GET` | `/dashboard` | Frontend UI |
+| `GET` | `/health` | `{"status": "ok"}` |
+| `GET` | `/metrics` | `{total_urls, total_users}` |
+| `GET/POST/PUT/DELETE` | `/users` | User CRUD (paginated) |
+| `GET/POST/PUT/DELETE` | `/urls` | URL CRUD |
+| `GET/POST` | `/events` | Event log (filterable by type, user, URL) |
+
+**Example:**
+```bash
+# Shorten
+curl -X POST http://localhost:5000/shorten \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://github.com"}'
+  -d '{"url": "https://github.com/lily1c"}'
+
+# Follow it
+curl -L http://localhost:5000/xK4m7291
 ```
 
 ## Scalability Quest Progress
 
 | Tier | Requirement | Status |
 |------|-------------|--------|
-| 🥉 Bronze | 50 concurrent users | ✅ Passed |
-| 🥈 Silver | 200 users + load balancer | ✅ Passed |
-| 🥇 Gold | 500 users + Redis caching | ✅ Passed |
+| 🥉 Bronze | Unit tests, health check, CRUD, input validation, seed data | ✅ |
+| 🥈 Silver | Docker, Nginx LB, Redis cache, k6 at 200 VUs | ✅ |
+| 🥇 Gold | 500 VUs (p95 < 500ms, err < 0.2%), graceful recovery, frontend, docs | ✅ |
 
 ## Load Testing
 
 ```bash
-# Install k6
 brew install k6
-
-# Run load test
 k6 run k6/load_test.js
 ```
 
-## Architecture
+Ramps from 0 → 200 → 500 virtual users. Each VU creates a short URL and follows the redirect. The script auto-prints which tier you hit.
 
-```
-                ┌─────────────┐
-                │    Nginx    │
-                │  (Port 80)  │
-                └──────┬──────┘
-                       │
-           ┌───────────┼───────────┐
-           │           │           │
-       ┌───▼───┐   ┌───▼───┐   ┌───▼───┐
-       │ App 1 │   │ App 2 │   │ App 3 │
-       │ :8000 │   │ :8000 │   │ :8000 │
-       └───┬───┘   └───┬───┘   └───┬───┘
-           │           │           │
-           └───────────┼───────────┘
-                       │
-               ┌───────┴───────┐
-               │               │
-           ┌───▼───┐       ┌───▼────┐
-           │ Redis │       │Postgres│
-           │ Cache │       │   DB   │
-           └───────┘       └────────┘
-```
+## How It Scales
+
+- **3 Flask instances** behind Nginx round-robin — no single point of failure
+- **Gunicorn** with 4 workers × 2 threads per instance = 24 concurrent handlers
+- **Redis** caches URL lookups (1h TTL) so redirects skip the database
+- **`restart: always`** on every app container — kill one, Docker restarts it, Nginx routes around it
+- **Graceful Redis fallback** — if Redis dies, the app keeps working via PostgreSQL
 
 ## Project Structure
 
 ```
-├── app/
-│   ├── __init__.py          # App factory
-│   ├── database.py          # Database connection
-│   ├── models/
-│   │   ├── user.py          # User model
-│   │   ├── url.py           # URL model
-│   │   └── event.py         # Event model
-│   └── routes/
-│       ├── users.py         # User endpoints
-│       ├── urls.py          # URL shortener endpoints
-│       └── events.py        # Event endpoints
-├── seed_data/
-│   ├── users.csv            # 400 users
-│   ├── urls.csv             # 2000 URLs
-│   └── events.csv           # 3422 events
-├── k6/
-│   └── load_test.js         # Load testing script
-├── setup_db.py              # Database setup + seed loader
-├── Dockerfile               # Container config
-├── docker-compose.yml       # Multi-container setup
-├── nginx.conf               # Load balancer config
-└── README.md
+app/
+├── models/          # User, URL, Event (Peewee ORM)
+├── routes/          # CRUD endpoints + frontend serving
+├── static/          # dashboard.html (vanilla JS, single file)
+├── cache.py         # Redis with graceful fallback
+└── database.py      # PostgreSQL connection
+
+k6/load_test.js      # Load test (Bronze → Silver → Gold)
+docker-compose.yml   # 6 containers, restart: always
+nginx.conf           # Round-robin load balancer
+setup_db.py          # Seed data loader
+ARCHITECTURE.md      # Full architecture documentation
 ```
 
 ## Team
@@ -155,6 +119,4 @@ k6 run k6/load_test.js
 - [Assol Abasova (@lily1c)](https://github.com/lily1c)
 - [Koleaje Olayinka (@koleajeolayinka)](https://github.com/koleajeolayinka)
 
-## License
-
-This project is open-source and available under the [MIT License](LICENSE).
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full technical deep dive — request flows, database schema, caching strategy, decision log, runbooks, and capacity planning.

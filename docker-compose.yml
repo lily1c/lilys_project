@@ -20,6 +20,7 @@ services:
 
   app1: &app
     build: .
+    restart: always
     environment:
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USER=${DATABASE_USER}

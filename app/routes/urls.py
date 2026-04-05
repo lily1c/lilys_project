@@ -68,17 +68,10 @@ def shorten():
             )
             cache = get_cache()
             if cache:
-                import json as _json
-                # Store full serialized object to avoid DB fetches on redirect
-                cache_data = _json.dumps({
-                    'id': url_obj.id,
-                    'original_url': url_obj.original_url,
-                    'is_active': url_obj.is_active,
-                    'user_id': url_obj.user_id
-                })
-                cache.set(f"url:{url_obj.short_code}", cache_data, ex=3600)
+                cache.set(f"url:{url_obj.short_code}", url_obj.original_url, ex=3600)
 
             # The Unseen Observer: log every creation
+            import json as _json
             from app.models.event import Event
             Event.create(
                 url_id=url_obj.id,
@@ -205,50 +198,39 @@ def redirect_url(short_code):
     from app.models.event import Event
     import json
     cache = get_cache()
+    original_url = None
     
     if cache:
         try:
-            cached_data = cache.get(f"url:{short_code}")
-            if cached_data:
-                u = json.loads(cached_data)
-                if not u.get('is_active', True):
-                    return jsonify({'error': 'URL not found'}), 404
-                
-                details = {
-                    'ip': request.remote_addr, 
-                    'user_agent': request.user_agent.string,
-                    'referrer': request.headers.get('Referer')
-                }
-                Event.create(
-                    url_id=u['id'],
-                    user_id=u.get('user_id'),
-                    event_type='redirect',
-                    details=json.dumps(details),
-                    timestamp=datetime.datetime.now(datetime.timezone.utc)
-                )
-                return redirect(u['original_url'], code=302)
+            original_url = cache.get(f"url:{short_code}")
         except Exception:
-            pass # Fallback to DB if cache fails
+            pass
 
     try:
         url_obj = URL.get(URL.short_code == short_code)
+        
         if not url_obj.is_active:
             return jsonify({'error': 'URL not found'}), 404
 
-        # Refresh cache
-        if cache:
-            cache.set(f"url:{short_code}", json.dumps({
-                'id': url_obj.id,
-                'original_url': url_obj.original_url,
-                'is_active': url_obj.is_active,
-                'user_id': url_obj.user_id
-            }), ex=3600)
+        if not original_url:
+            original_url = url_obj.original_url
+            if cache:
+                try:
+                    cache.set(f"url:{short_code}", original_url, ex=3600)
+                except Exception:
+                    pass
 
         details = {
             'ip': request.remote_addr,
             'user_agent': request.user_agent.string,
-            'referrer': request.headers.get('Referer')
+            'referrer': request.headers.get('Referer'),
+            'browser': request.user_agent.browser,
+            'platform': request.user_agent.platform,
+            'host': request.host,
+            'method': request.method,
+            'path': request.path
         }
+        
         Event.create(
             url_id=url_obj.id,
             user_id=url_obj.user_id,
@@ -256,6 +238,8 @@ def redirect_url(short_code):
             details=json.dumps(details),
             timestamp=datetime.datetime.now(datetime.timezone.utc)
         )
-        return redirect(url_obj.original_url, code=302)
+
+        return redirect(original_url, code=302)
+        
     except DoesNotExist:
         return jsonify({'error': 'URL not found'}), 404

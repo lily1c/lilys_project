@@ -92,11 +92,27 @@ def create_event():
         details = json.dumps(details)
         
     import datetime
-    timestamp = data.get('timestamp') or datetime.datetime.now()
-        
+    timestamp = data.get('timestamp')
+    if timestamp:
+        try:
+            if isinstance(timestamp, str):
+                timestamp = datetime.datetime.fromisoformat(timestamp)
+        except ValueError:
+            return jsonify({'error': 'Invalid timestamp format'}), 400
+    else:
+        timestamp = datetime.datetime.now()
+
+    url_id = data.get('url_id')
+    if url_id is not None and not isinstance(url_id, int):
+        return jsonify({'error': 'Invalid data type for url_id'}), 400
+
+    user_id = data.get('user_id')
+    if user_id is not None and not isinstance(user_id, int):
+        return jsonify({'error': 'Invalid data      type for user_id'}), 400
+
     event = Event.create(
-        url_id=data.get('url_id'), 
-        user_id=data.get('user_id'), 
+        url_id=url_id, 
+        user_id=user_id, 
         event_type=data['event_type'], 
         details=details,
         timestamp=timestamp

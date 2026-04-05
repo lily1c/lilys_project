@@ -174,26 +174,23 @@ def stats(short_code):
 def redirect_url(short_code):
     from app.models.event import Event
     cache = get_cache()
-    original_url = None
-    
-    if cache:
-        try:
-            original_url = cache.get(f"url:{short_code}")
-        except Exception:
-            pass
-
     try:
         url_obj = None
-        if not original_url:
-            url_obj = URL.get(URL.short_code == short_code)
-            original_url = url_obj.original_url
-            if cache:
-                cache.set(f"url:{short_code}", original_url, ex=3600)
+        if cache:
+            # We check cache for the object or its status
+            # But more simply, we always fetch from DB for the status to be 100% safe
+            # OR we store status in cache. Let's ensure we fetch the object.
+            try:
+                url_obj = URL.get(URL.short_code == short_code)
+            except DoesNotExist:
+                return jsonify({'error': 'URL not found'}), 404
         else:
             url_obj = URL.get(URL.short_code == short_code)
 
         if not url_obj.is_active:
             return jsonify({'error': 'URL de-activated'}), 410
+
+        original_url = url_obj.original_url
 
         import json
         details = {
@@ -209,7 +206,7 @@ def redirect_url(short_code):
             user_id=url_obj.user_id,
             event_type='redirect',
             details=json.dumps(details),
-            timestamp=datetime.datetime.now(datetime.timezone.utc) # Using UTC to avoid timezone mismatches
+            timestamp=datetime.datetime.now()
         )
 
         return redirect(original_url, code=302)

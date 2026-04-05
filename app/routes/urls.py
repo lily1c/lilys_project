@@ -29,7 +29,8 @@ def metrics():
 @urls_bp.route('/shorten', methods=['POST'])
 def shorten():
     data = request.get_json(force=True, silent=True)
-    if not data:
+    # The Fractured Vessel: reject non-dict payloads (bare strings, arrays, etc.)
+    if not data or not isinstance(data, dict):
         return jsonify({'error': 'No data provided'}), 400
         
     original_url = data.get('url') or data.get('original_url')
@@ -44,6 +45,9 @@ def shorten():
         
     if title is not None and not isinstance(title, str):
         return jsonify({'error': 'Invalid data type for title'}), 400
+
+    if user_id is not None and not isinstance(user_id, int):
+        return jsonify({'error': 'Invalid data type for user_id'}), 400
     
     # The Deceitful Scroll & Unwitting Stranger: Stricter validation
     if len(original_url) > 2048 or (title and len(title) > 255):
@@ -52,18 +56,7 @@ def shorten():
     if not original_url.startswith(('http://', 'https://')):
         return jsonify({'error': 'Unsupported URL format'}), 400
 
-    existing = URL.select().where(URL.original_url == original_url)
-    if user_id:
-        existing = existing.where(URL.user_id == user_id)
-    else:
-        existing = existing.where(URL.user_id.is_null())
-    
-    existing = existing.first()
-    if existing:
-        edata = model_to_dict(existing)
-        edata['short_url'] = f"{request.scheme}://{request.host}/{existing.short_code}"
-        return jsonify(edata), 201
-
+    # The Twin's Paradox: every creation gets its own unique short code
     for attempt in range(10):
         short_code = generate_short_code()
         try:
@@ -133,7 +126,7 @@ def update_url(url_id):
         return jsonify({'error': 'URL not found'}), 404
         
     data = request.get_json(force=True, silent=True)
-    if data is None:
+    if data is None or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON'}), 400
 
     if 'title' in data:

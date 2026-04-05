@@ -35,7 +35,7 @@ def get_user(user_id):
 @users_bp.route('/users', methods=['POST'])
 def create_user():
     data = request.get_json(force=True, silent=True)
-    if data is None:
+    if data is None or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON'}), 400
     if 'username' not in data or 'email' not in data:
         return jsonify({'error': 'Missing required fields: username and email'}), 400
@@ -61,7 +61,7 @@ def update_user(user_id):
     except DoesNotExist:
         return jsonify({'error': 'User not found'}), 404
     data = request.get_json(force=True, silent=True)
-    if data is None:
+    if data is None or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON'}), 400
     if 'username' in data:
         if not isinstance(data['username'], str):

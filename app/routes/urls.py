@@ -218,7 +218,7 @@ def redirect_url(short_code):
                 # Check is_active from cache (Challenge #5)
                 # "Leave no footprint behind": Return 404 BEFORE calling Event.create()
                 if not url_data.get('is_active', True):
-                    return jsonify({'error': 'URL not found'}), 404
+                    return jsonify({'error': 'URL de-activated'}), 410
                 
                 # Log event (Challenge #4 - The Unseen Observer)
                 details = {
@@ -250,7 +250,7 @@ def redirect_url(short_code):
     try:
         url_obj = URL.get(URL.short_code == short_code)
         if not url_obj.is_active:
-            return jsonify({'error': 'URL not found'}), 404
+            return jsonify({'error': 'URL de-activated'}), 410
 
         # Refresh Cache
         if cache:

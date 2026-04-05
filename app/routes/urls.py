@@ -70,6 +70,17 @@ def shorten():
             if cache:
                 cache.set(f"url:{url_obj.short_code}", url_obj.original_url, ex=3600)
 
+            # The Unseen Observer: log every creation
+            import json as _json
+            from app.models.event import Event
+            Event.create(
+                url_id=url_obj.id,
+                user_id=user_id,
+                event_type='created',
+                details=_json.dumps({'short_code': url_obj.short_code, 'original_url': original_url}),
+                timestamp=datetime.datetime.now(datetime.timezone.utc)
+            )
+
             edata = model_to_dict(url_obj)
             edata['short_url'] = f"{request.scheme}://{request.host}/{url_obj.short_code}"
             return jsonify(edata), 201

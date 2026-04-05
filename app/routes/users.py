@@ -44,6 +44,8 @@ def create_user():
     # Stricter validation
     if not isinstance(username, str) or not isinstance(email, str):
         return jsonify({'error': 'Invalid data types: username and email must be strings'}), 400
+    if len(username.strip()) == 0 or len(email.strip()) == 0:
+        return jsonify({'error': 'Username and email cannot be empty'}), 400
     if len(username) > 50:
         return jsonify({'error': 'Username too long (max 50)'}), 400
     if len(email) > 255:

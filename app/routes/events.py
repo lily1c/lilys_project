@@ -81,8 +81,8 @@ def create_event():
         return jsonify({'error': 'Malformed JSON or no data provided'}), 400
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
-    if not isinstance(data['event_type'], str):
-        return jsonify({'error': 'Invalid data type for event_type'}), 400
+    if not isinstance(data['event_type'], str) or len(data['event_type'].strip()) == 0:
+        return jsonify({'error': 'Invalid or empty event_type'}), 400
     if len(data['event_type']) > 50:
         return jsonify({'error': 'Event type too long (max 50)'}), 400
     details = data.get('details')

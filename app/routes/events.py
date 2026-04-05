@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 from playhouse.shortcuts import model_to_dict
 from peewee import DoesNotExist
 from app.models.event import Event
+import json
+import datetime
 
 events_bp = Blueprint('events', __name__)
 
@@ -34,8 +36,6 @@ def list_events():
     events = query.order_by(Event.id).paginate(page, min(per_page, 100))
     
     sample = []
-    import json
-    import datetime
     for e in events:
         edata = model_to_dict(e)
         if edata.get('details'):
@@ -59,8 +59,6 @@ def list_events():
 def get_event(event_id):
     try:
         edata = model_to_dict(Event.get_by_id(event_id))
-        import datetime
-        import json
         if edata.get('details'):
             try:
                 edata['details'] = json.loads(edata['details'])
@@ -74,29 +72,48 @@ def get_event(event_id):
 
 @events_bp.route('/events', methods=['POST'])
 def create_event():
-    import json
     data = request.get_json(force=True, silent=True)
-    if not data:
+    if not data or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON or no data provided'}), 400
+    
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
+        
     if not isinstance(data['event_type'], str):
         return jsonify({'error': 'Invalid data type for event_type'}), 400
+        
     if len(data['event_type']) > 50:
         return jsonify({'error': 'Event type too long (max 50)'}), 400
+
     details = data.get('details')
     if details is not None and not (isinstance(details, dict) or isinstance(details, str)):
         return jsonify({'error': 'Details must be a dict or string'}), 400
+        
     if isinstance(details, dict):
         details = json.dumps(details)
+
     url_id = data.get('url_id')
     user_id = data.get('user_id')
+    
+    # Strict validation for Challenge #6
     if url_id is not None and not isinstance(url_id, int):
         return jsonify({'error': 'url_id must be integer'}), 400
     if user_id is not None and not isinstance(user_id, int):
         return jsonify({'error': 'user_id must be integer'}), 400
-    import datetime
-    timestamp = data.get('timestamp') or datetime.datetime.now()
+
+    # Timestamp handling for Challenge #4
+    timestamp_raw = data.get('timestamp')
+    if timestamp_raw:
+        try:
+            if isinstance(timestamp_raw, str):
+                timestamp = datetime.datetime.fromisoformat(timestamp_raw)
+            else:
+                timestamp = timestamp_raw 
+        except ValueError:
+            return jsonify({'error': 'Invalid timestamp format'}), 400
+    else:
+        timestamp = datetime.datetime.now()
+
     try:
         event = Event.create(
             url_id=url_id,
@@ -105,6 +122,7 @@ def create_event():
             details=details,
             timestamp=timestamp
         )
+        
         edata = model_to_dict(event)
         if edata.get('details'):
             try:

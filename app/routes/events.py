@@ -101,20 +101,33 @@ def create_event():
     url_id = data.get('url_id')
     user_id = data.get('user_id')
     
-    if url_id is not None:
-        if type(url_id) is not int:
-            return jsonify({'error': 'url_id must be integer'}), 400
+    from app.models.user import User
+    from app.models.url import URL
+    
     if user_id is not None:
-        if type(user_id) is not int:
+        if not isinstance(user_id, int):
             return jsonify({'error': 'user_id must be integer'}), 400
+        try:
+            User.get_by_id(user_id)
+        except DoesNotExist:
+            return jsonify({'error': 'User not found'}), 404
             
+    if url_id is not None:
+        if not isinstance(url_id, int):
+            return jsonify({'error': 'url_id must be integer'}), 400
+        try:
+            URL.get_by_id(url_id)
+        except DoesNotExist:
+            return jsonify({'error': 'URL not found'}), 404
+
     timestamp_val = data.get('timestamp')
     import datetime
     if timestamp_val is not None:
         if not isinstance(timestamp_val, str):
             return jsonify({'error': 'Invalid data type for timestamp'}), 400
         try:
-            timestamp = datetime.datetime.fromisoformat(timestamp_val)
+            ts_str = timestamp_val.replace('Z', '+00:00')
+            timestamp = datetime.datetime.fromisoformat(ts_str)
         except ValueError:
             return jsonify({'error': 'Invalid timestamp format'}), 400
     else:
@@ -129,13 +142,15 @@ def create_event():
             timestamp=timestamp
         )
         edata = model_to_dict(event)
-        if edata.get('details'):
+        if edata.get('details') and isinstance(edata['details'], str):
             try:
                 edata['details'] = json.loads(edata['details'])
             except Exception:
                 pass
+        
         if isinstance(edata.get('timestamp'), datetime.datetime):
             edata['timestamp'] = edata['timestamp'].isoformat()
+            
         return jsonify(edata), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400

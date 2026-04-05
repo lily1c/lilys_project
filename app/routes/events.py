@@ -70,7 +70,10 @@ def create_event():
     if not data or 'event_type' not in data:
         return jsonify({'error': 'Missing event_type'}), 400
         
-    if len(str(data['event_type'])) > 50:
+    if not isinstance(data['event_type'], str):
+        return jsonify({'error': 'Invalid data type for event_type'}), 400
+        
+    if len(data['event_type']) > 50:
         return jsonify({'error': 'Input too long'}), 400
     
     details = data.get('details')

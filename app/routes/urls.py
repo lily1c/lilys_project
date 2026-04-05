@@ -38,6 +38,12 @@ def shorten():
 
     if not original_url:
         return jsonify({'error': 'Missing url field'}), 400
+        
+    if not isinstance(original_url, str):
+        return jsonify({'error': 'Invalid data type for original_url'}), 400
+        
+    if title is not None and not isinstance(title, str):
+        return jsonify({'error': 'Invalid data type for title'}), 400
     
     # The Deceitful Scroll & Unwitting Stranger: Stricter validation
     if len(original_url) > 2048 or (title and len(title) > 255):
@@ -56,7 +62,7 @@ def shorten():
     if existing:
         edata = model_to_dict(existing)
         edata['short_url'] = f"{request.scheme}://{request.host}/{existing.short_code}"
-        return jsonify(edata), 201
+        return jsonify(edata), 200
 
     for attempt in range(10):
         short_code = generate_short_code()
@@ -112,12 +118,21 @@ def update_url(url_id):
     except DoesNotExist:
         return jsonify({'error': 'URL not found'}), 404
         
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({'error': 'Malformed JSON'}), 400
+
     if 'title' in data:
+        if not isinstance(data['title'], str):
+            return jsonify({'error': 'Invalid type for title'}), 400
         url_obj.title = data['title']
     if 'is_active' in data:
+        if not isinstance(data['is_active'], bool):
+            return jsonify({'error': 'Invalid type for is_active'}), 400
         url_obj.is_active = data['is_active']
     if 'original_url' in data:
+        if not isinstance(data['original_url'], str):
+            return jsonify({'error': 'Invalid type for original_url'}), 400
         url_obj.original_url = data['original_url']
         
     url_obj.save()

@@ -43,6 +43,9 @@ def create_user():
     username = data['username']
     email = data['email']
     
+    if not isinstance(username, str) or not isinstance(email, str):
+        return jsonify({'error': 'Invalid data types'}), 400
+    
     if len(str(username)) > 50 or len(str(email)) > 255:
         return jsonify({'error': 'Input too long'}), 400
     
@@ -64,8 +67,12 @@ def update_user(user_id):
         return jsonify({'error': 'Malformed JSON'}), 400
         
     if 'username' in data:
+        if not isinstance(data['username'], str):
+            return jsonify({'error': 'Invalid data type for username'}), 400
         user.username = data['username']
     if 'email' in data:
+        if not isinstance(data['email'], str):
+            return jsonify({'error': 'Invalid data type for email'}), 400
         user.email = data['email']
         
     try:

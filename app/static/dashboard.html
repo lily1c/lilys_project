@@ -119,6 +119,8 @@ a{color:var(--accent);text-decoration:none}
 select{padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;outline:none}
 pre.json{margin:0;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-all}
 @keyframes slideIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Remove the custom .k6-card.bronze, .k6-card.silver, .k6-card.gold classes */
 </style>
 </head>
 <body>
@@ -288,7 +290,7 @@ function copyHeroLink(){if(!lastHero)return;navigator.clipboard.writeText(locati
 async function testRedirect(){if(!lastHero)return;window.open(location.origin+'/'+lastHero.short_code,'_blank');setTimeout(async function(){try{var ev=await api('/events?url_id='+lastHero.id+'&event_type=redirect&per_page=1');sessionEvents.unshift({type:'redirect',code:lastHero.short_code,time:new Date().toISOString()});renderSessionEvents();toast((ev.sample||[]).length+' redirect event(s)','success');refreshCounts()}catch(e){}},1500)}
 function renderSessionEvents(){var el=document.getElementById('session-events');if(!sessionEvents.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--dim);font-size:12px">Shorten a URL to see events</div>';return}el.innerHTML=sessionEvents.map(function(ev){var c=ev.type==='created'?'var(--success)':'var(--info)';return'<div class="row" style="padding:9px 14px;animation:slideIn .3s"><span style="color:'+c+';font-size:12px">⚡</span><span class="badge" style="color:'+c+';background:'+c+'15">'+ev.type+'</span><span class="mono" style="font-size:11px;color:var(--accent)">/'+ev.code+'</span><span style="flex:1"></span><span style="font-size:10px;color:var(--dim)">'+timeAgo(ev.time)+'</span></div>'}).join('')}
 
-// ─── Refresh counts across tabs ───
+/* Refresh counts across tabs */
 async function refreshCounts(){try{var m=await api('/metrics');document.getElementById('m-urls').textContent=m.total_urls||0;document.getElementById('m-users').textContent=m.total_users||0}catch(e){}try{var ev=await api('/events?per_page=1');document.getElementById('m-events').textContent=ev.total_items||0}catch(e){}try{var rd=await api('/events?event_type=redirect&per_page=1');document.getElementById('m-redirects').textContent=rd.total_items||0}catch(e){}}
 
 // ─── URLs ───
@@ -306,55 +308,3 @@ async function deleteUser(id){try{await api('/users/'+id,{method:'DELETE'});toas
 
 // ─── Events ───
 async function loadEvents(){var tf=document.getElementById('event-type-filter').value;var p='/events?page='+eventsPage+'&per_page='+eventsPerPage;if(tf)p+='&event_type='+tf;try{var d=await api(p);var evts=d.sample||[];eventsTotal=d.total_items||0;document.getElementById('events-count').textContent='('+eventsTotal+')';var el=document.getElementById('events-list');var tc={redirect:'var(--info)',created:'var(--success)'};if(!evts.length){el.innerHTML='<div style="padding:40px;text-align:center;color:var(--dim);font-size:12px">No events</div>';return}el.innerHTML=evts.map(function(ev){var c=tc[ev.event_type]||'var(--dim)';var ex=expandedEvent===ev.id;var ds='';if(ev.details)try{ds=typeof ev.details==='object'?JSON.stringify(ev.details,null,2):ev.details}catch(e){ds=String(ev.details)}return'<div style="border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--surface);margin-bottom:4px"><div style="display:flex;align-items:center;padding:9px 14px;gap:10px;cursor:pointer" onclick="expandedEvent=expandedEvent==='+ev.id+'?null:'+ev.id+';loadEvents()"><span style="color:'+c+';font-size:12px">⚡</span><span class="badge" style="color:'+c+';background:'+c+'15">'+ev.event_type+'</span>'+(ev.url_id?'<span class="mono" style="font-size:10px;color:var(--dim)">url:'+ev.url_id+'</span>':'')+(ev.user_id?'<span class="mono" style="font-size:10px;color:var(--dim)">user:'+ev.user_id+'</span>':'')+'<span style="flex:1"></span><span style="font-size:10px;color:var(--dim)">'+timeAgo(ev.timestamp)+'</span>'+(ev.details?'<span style="color:var(--dim);font-size:12px">'+(ex?'▲':'▼')+'</span>':'')+'</div>'+(ex&&ds?'<div style="padding:6px 14px 10px;border-top:1px solid var(--border)"><pre class="json">'+escapeHtml(ds)+'</pre></div>':'')+'</div>'}).join('');var tp=Math.ceil(eventsTotal/eventsPerPage);document.getElementById('events-pagination').innerHTML=tp<=1?'':'<button class="btn btn-secondary btn-sm" '+(eventsPage<=1?'disabled':'')+' onclick="eventsPage--;loadEvents()">←</button><span class="mono" style="font-size:11px;color:var(--dim)">'+eventsPage+'/'+tp+'</span><button class="btn btn-secondary btn-sm" '+(eventsPage>=tp?'disabled':'')+' onclick="eventsPage++;loadEvents()">→</button>'}catch(e){toast(e.message,'error')}}
-
-// ─── Test Runner ───
-var testDefs={bronze:[
-{id:'b1',name:'Health check',desc:'GET /health → ok',run:async function(){var d=await api('/health');if(d.status!=='ok')throw new Error('bad');return'ok'}},
-{id:'b2',name:'Create user',desc:'POST /users',run:async function(){var t=Date.now();var d=await api('/users',{method:'POST',body:JSON.stringify({username:'t'+t,email:'t'+t+'@t.co'})});return'id:'+d.id}},
-{id:'b3',name:'Shorten URL',desc:'POST /shorten',run:async function(){var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/t'+Date.now()})});return d.short_code}},
-{id:'b4',name:'Reject bad URL',desc:'invalid format → 400',run:async function(){var r=await fetch('/shorten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:'bad'})});if(r.status!==400)throw new Error(r.status);return'400'}},
-{id:'b5',name:'Reject long input',desc:'username > 50 chars → 400',run:async function(){var r=await fetch('/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'a'.repeat(100),email:'x@x.co'})});if(r.status!==400)throw new Error(r.status);return'400'}},
-{id:'b6',name:'Reject bad JSON',desc:'array body → 400',run:async function(){var r=await fetch('/shorten',{method:'POST',headers:{'Content-Type':'application/json'},body:'[1]'});if(r.status!==400)throw new Error(r.status);return'400'}},
-{id:'b7',name:'Seed data loaded',desc:'metrics > 0',run:async function(){var d=await api('/metrics');if(d.total_urls<1)throw new Error('empty');return d.total_urls+'urls '+d.total_users+'users'}}
-],silver:[
-{id:'s1',name:'Fast response',desc:'health < 200ms',run:async function(){var t=performance.now();await api('/health');var ms=Math.round(performance.now()-t);if(ms>200)throw new Error(ms+'ms');return ms+'ms'}},
-{id:'s2',name:'Cache works',desc:'2nd redirect faster',run:async function(){var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/c'+Date.now()})});var t1=performance.now();await fetch('/'+d.short_code,{redirect:'manual'});var ms1=Math.round(performance.now()-t1);var t2=performance.now();await fetch('/'+d.short_code,{redirect:'manual'});var ms2=Math.round(performance.now()-t2);return ms1+'ms→'+ms2+'ms'}},
-{id:'s3',name:'Pagination',desc:'per_page=5 returns ≤5',run:async function(){var d=await api('/users?page=1&per_page=5');if(d.sample.length>5)throw new Error('too many');return d.sample.length+'/'+d.total_items}},
-{id:'s4',name:'Event filter',desc:'type=created filter works',run:async function(){var d=await api('/events?event_type=created&per_page=3');if(!d.sample.every(function(e){return e.event_type==='created'}))throw new Error('wrong types');return d.total_items+' events'}}
-],gold:[
-{id:'g1',name:"Twin's Paradox",desc:'same URL → unique codes',run:async function(){var u='https://example.com/tw'+Date.now();var a=await api('/shorten',{method:'POST',body:JSON.stringify({url:u})});var b=await api('/shorten',{method:'POST',body:JSON.stringify({url:u})});if(a.short_code===b.short_code)throw new Error('same');return a.short_code+'≠'+b.short_code}},
-{id:'g2',name:'Unseen Observer',desc:'redirect logs event',run:async function(){var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/ob'+Date.now()})});await fetch('/'+d.short_code,{redirect:'manual'});await new Promise(function(r){setTimeout(r,500)});var ev=await api('/events?url_id='+d.id+'&event_type=redirect');if(!ev.sample.length)throw new Error('none');return'logged'}},
-{id:'g3',name:'Slumbering Guide',desc:'deactivated → 410, no event',run:async function(){var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/sl'+Date.now()})});await api('/urls/'+d.id,{method:'PUT',body:JSON.stringify({is_active:false})});var r=await fetch('/'+d.short_code,{redirect:'manual'});if(r.status!==410)throw new Error(r.status);await new Promise(function(r){setTimeout(r,300)});var ev=await api('/events?url_id='+d.id+'&event_type=redirect');if(ev.sample.length)throw new Error('event leaked');return'410, clean'}},
-{id:'g4',name:'Creation event',desc:'shorten logs created event',run:async function(){var d=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/ce'+Date.now()})});await new Promise(function(r){setTimeout(r,300)});var ev=await api('/events?url_id='+d.id+'&event_type=created');if(!ev.sample.length)throw new Error('none');return'logged'}},
-{id:'g5',name:'Reject empty strings',desc:'event_type="" → 400',run:async function(){var r=await fetch('/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event_type:''})});if(r.status!==400)throw new Error(r.status);return'400'}},
-{id:'g6',name:'Cascade delete',desc:'delete user removes URLs',run:async function(){var t=Date.now();var u=await api('/users',{method:'POST',body:JSON.stringify({username:'d'+t,email:'d'+t+'@t.co'})});var url=await api('/shorten',{method:'POST',body:JSON.stringify({url:'https://example.com/d'+t,user_id:u.id})});await api('/users/'+u.id,{method:'DELETE'});var r=await fetch('/urls/'+url.id);if(r.status!==404)throw new Error('still exists');return'cleaned'}}
-]};
-var testResults={};
-
-function renderTests(){
-  ['bronze','silver','gold'].forEach(function(tier){
-    var emoji=tier==='bronze'?'🥉':tier==='silver'?'🥈':'🥇';
-    var color=tier==='bronze'?'#E8A830':tier==='silver'?'#3DEB7A':'#A07BF0';
-    var tests=testDefs[tier];
-    var passed=tests.filter(function(t){return testResults[t.id]&&testResults[t.id].state==='pass'}).length;
-    var el=document.getElementById('test-'+tier);
-    el.innerHTML='<div class="test-tier-head"><span>'+emoji+'</span><span style="color:'+color+'">'+tier.charAt(0).toUpperCase()+tier.slice(1)+'</span><span class="test-tier-count">'+passed+'/'+tests.length+'</span></div>'+tests.map(function(t){var r=testResults[t.id];var s=r?r.state:'pending';var icon=s==='pass'?'✓':s==='fail'?'✗':s==='running'?'⋯':'○';return'<div class="t-row '+(s==='pass'||s==='fail'?s:'')+'"><div class="t-icon '+s+'">'+icon+'</div><div style="flex:1"><div class="t-name">'+t.name+'</div><div class="t-desc">'+t.desc+'</div></div><div class="t-detail">'+(r&&r.detail||'')+'</div><div class="t-ms">'+(r&&r.ms?r.ms+'ms':'')+'</div></div>'}).join('');
-  });
-  var all=[].concat(testDefs.bronze,testDefs.silver,testDefs.gold);
-  var tp=all.filter(function(t){return testResults[t.id]&&testResults[t.id].state==='pass'}).length;
-  var el=document.getElementById('test-summary');
-  if(tp>0){var tier=tp===all.length?'🥇 Gold':tp>=(testDefs.bronze.length+testDefs.silver.length)?'🥈 Silver':tp>=testDefs.bronze.length?'🥉 Bronze':'';el.innerHTML='<span style="color:var(--success)">'+tp+'/'+all.length+'</span>'+(tier?' '+tier:'')}
-}
-
-async function runAllTests(){
-  var btn=document.getElementById('run-btn');btn.disabled=true;btn.textContent='Running…';testResults={};renderTests();
-  var all=[].concat(testDefs.bronze,testDefs.silver,testDefs.gold);
-  for(var i=0;i<all.length;i++){var t=all[i];testResults[t.id]={state:'running'};renderTests();var s=performance.now();try{var detail=await t.run();testResults[t.id]={state:'pass',detail:detail,ms:Math.round(performance.now()-s)}}catch(e){testResults[t.id]={state:'fail',detail:e.message,ms:Math.round(performance.now()-s)}}renderTests()}
-  btn.disabled=false;btn.textContent='▶ Run All';refreshCounts();
-}
-
-// ─── Boot ───
-loadOverview();renderSessionEvents();renderTests();
-</script>
-</body>
-</html>

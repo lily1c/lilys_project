@@ -76,56 +76,43 @@ def get_event(event_id):
 def create_event():
     import json
     data = request.get_json(force=True, silent=True)
-    if not data or not isinstance(data, dict):
-        return jsonify({'error': 'Malformed JSON details'}), 400
+    if not data:
+        return jsonify({'error': 'Malformed JSON or no data provided'}), 400
     if 'event_type' not in data:
-        return jsonify({'error': 'Missing event_type'}), 400
-        
+        return jsonify({'error': 'Missing required field: event_type'}), 400
     if not isinstance(data['event_type'], str):
         return jsonify({'error': 'Invalid data type for event_type'}), 400
-        
     if len(data['event_type']) > 50:
-        return jsonify({'error': 'Input too long'}), 400
-    
+        return jsonify({'error': 'Event type too long (max 50)'}), 400
     details = data.get('details')
+    if details is not None and not (isinstance(details, dict) or isinstance(details, str)):
+        return jsonify({'error': 'Details must be a dict or string'}), 400
     if isinstance(details, dict):
         details = json.dumps(details)
-        
-    import datetime
-    timestamp = data.get('timestamp')
-    if timestamp:
-        try:
-            if isinstance(timestamp, str):
-                timestamp = datetime.datetime.fromisoformat(timestamp)
-        except ValueError:
-            return jsonify({'error': 'Invalid timestamp format'}), 400
-    else:
-        timestamp = datetime.datetime.now()
-
     url_id = data.get('url_id')
-    if url_id is not None and not isinstance(url_id, int):
-        return jsonify({'error': 'Invalid data type for url_id'}), 400
-
     user_id = data.get('user_id')
+    if url_id is not None and not isinstance(url_id, int):
+        return jsonify({'error': 'url_id must be integer'}), 400
     if user_id is not None and not isinstance(user_id, int):
-        return jsonify({'error': 'Invalid data      type for user_id'}), 400
-
-    event = Event.create(
-        url_id=url_id, 
-        user_id=user_id, 
-        event_type=data['event_type'], 
-        details=details,
-        timestamp=timestamp
-    )
-    
-    edata = model_to_dict(event)
+        return jsonify({'error': 'user_id must be integer'}), 400
+    import datetime
+    timestamp = data.get('timestamp') or datetime.datetime.now()
     try:
+        event = Event.create(
+            url_id=url_id,
+            user_id=user_id,
+            event_type=data['event_type'],
+            details=details,
+            timestamp=timestamp
+        )
+        edata = model_to_dict(event)
         if edata.get('details'):
-            edata['details'] = json.loads(edata['details'])
-    except Exception:
-        pass
-        
-    if isinstance(edata.get('timestamp'), datetime.datetime):
-        edata['timestamp'] = edata['timestamp'].isoformat()
-        
-    return jsonify(edata), 201
+            try:
+                edata['details'] = json.loads(edata['details'])
+            except Exception:
+                pass
+        if isinstance(edata.get('timestamp'), datetime.datetime):
+            edata['timestamp'] = edata['timestamp'].isoformat()
+        return jsonify(edata), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400

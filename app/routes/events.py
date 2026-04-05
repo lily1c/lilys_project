@@ -76,7 +76,9 @@ def get_event(event_id):
 def create_event():
     import json
     data = request.get_json(force=True, silent=True)
-    if not data or 'event_type' not in data:
+    if not data or not isinstance(data, dict):
+        return jsonify({'error': 'Malformed JSON details'}), 400
+    if 'event_type' not in data:
         return jsonify({'error': 'Missing event_type'}), 400
         
     if not isinstance(data['event_type'], str):

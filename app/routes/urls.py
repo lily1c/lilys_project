@@ -29,8 +29,8 @@ def metrics():
 @urls_bp.route('/shorten', methods=['POST'])
 def shorten():
     data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({'error': 'No data provided'}), 400
+    if not data or not isinstance(data, dict):
+        return jsonify({'error': 'No data provided or invalid format'}), 400
         
     original_url = data.get('url') or data.get('original_url')
     user_id = data.get('user_id')
@@ -133,7 +133,7 @@ def update_url(url_id):
         return jsonify({'error': 'URL not found'}), 404
         
     data = request.get_json(force=True, silent=True)
-    if data is None:
+    if not data or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON'}), 400
 
     if 'title' in data:

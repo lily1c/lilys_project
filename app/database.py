@@ -1,6 +1,6 @@
 import os
-
-from peewee import DatabaseProxy, Model, PostgresqlDatabase
+from peewee import DatabaseProxy, Model
+from playhouse.pool import PooledPostgresqlDatabase
 
 db = DatabaseProxy()
 
@@ -11,8 +11,11 @@ class BaseModel(Model):
 
 
 def init_db(app):
-    database = PostgresqlDatabase(
+    database = PooledPostgresqlDatabase(
         os.environ.get("DATABASE_NAME", "hackathon_db"),
+        max_connections=20,
+        stale_timeout=300,
+        timeout=10,
         host=os.environ.get("DATABASE_HOST", "localhost"),
         port=int(os.environ.get("DATABASE_PORT", 5432)),
         user=os.environ.get("DATABASE_USER", "postgres"),
@@ -24,7 +27,7 @@ def init_db(app):
     from app.models.url import URL
     from app.models.event import Event
     
-    db.create_tables([User, URL, Event], safe=True)
+    # Table creation is handled by setup_db.py in CI to prevent race conditions
 
     @app.before_request
     def _db_connect():

@@ -108,7 +108,7 @@ def create_event():
             if isinstance(timestamp_raw, str):
                 timestamp = datetime.datetime.fromisoformat(timestamp_raw)
             else:
-                timestamp = timestamp_raw # Fallback if it's already a datetime (though usually JSON is str)
+                timestamp = timestamp_raw 
         except ValueError:
             return jsonify({'error': 'Invalid timestamp format'}), 400
     else:

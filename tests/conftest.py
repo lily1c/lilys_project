@@ -8,10 +8,18 @@ def app():
         "TESTING": True,
     })
     
-    # Create tables in mock SQLite for testing if needed,
-    # or just use the existing DB (if safe).
-    # For now, we'll assume the tables exist.
+    from app.database import db
+    from app.models.user import User
+    from app.models.url import URL
+    from app.models.event import Event
+    
+    with app.app_context():
+        db.create_tables([User, URL, Event], safe=True)
+    
     yield app
+    
+    with app.app_context():
+        db.drop_tables([User, URL, Event], safe=True)
 
 @pytest.fixture
 def client(app):

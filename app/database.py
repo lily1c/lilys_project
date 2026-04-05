@@ -1,6 +1,6 @@
 import os
 
-from peewee import DatabaseProxy, Model, PostgresqlDatabase
+from peewee import DatabaseProxy, Model
 from playhouse.pool import PooledPostgresqlDatabase
 
 db = DatabaseProxy()

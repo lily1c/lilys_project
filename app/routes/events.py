@@ -76,38 +76,50 @@ def get_event(event_id):
 def create_event():
     import json
     data = request.get_json(force=True, silent=True)
-    # The Fractured Vessel: reject non-dict payloads
+    
     if not data or not isinstance(data, dict):
         return jsonify({'error': 'Malformed JSON or no data provided'}), 400
+        
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
+        
     if not isinstance(data['event_type'], str) or len(data['event_type'].strip()) == 0:
         return jsonify({'error': 'Invalid or empty event_type'}), 400
+        
     if len(data['event_type']) > 50:
         return jsonify({'error': 'Event type too long (max 50)'}), 400
+        
     details = data.get('details')
     if details is not None:
         if isinstance(details, dict):
             details = json.dumps(details)
         elif isinstance(details, str):
-            pass  # strings are fine
+            pass
         else:
             return jsonify({'error': 'Invalid data type for details'}), 400
+            
     url_id = data.get('url_id')
     user_id = data.get('user_id')
+    
     if url_id is not None:
-        if not isinstance(url_id, int):
+        if type(url_id) is not int:
             return jsonify({'error': 'url_id must be integer'}), 400
     if user_id is not None:
-        if not isinstance(user_id, int):
+        if type(user_id) is not int:
             return jsonify({'error': 'user_id must be integer'}), 400
-    # Validate timestamp if provided
+            
     timestamp_val = data.get('timestamp')
     import datetime
     if timestamp_val is not None:
         if not isinstance(timestamp_val, str):
             return jsonify({'error': 'Invalid data type for timestamp'}), 400
-    timestamp = timestamp_val or datetime.datetime.now()
+        try:
+            timestamp = datetime.datetime.fromisoformat(timestamp_val)
+        except ValueError:
+            return jsonify({'error': 'Invalid timestamp format'}), 400
+    else:
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
+        
     try:
         event = Event.create(
             url_id=url_id,

@@ -7,20 +7,11 @@ events_bp = Blueprint('events', __name__)
 
 @events_bp.route('/events', methods=['GET'])
 def list_events():
-    try:
-        url_id = int(request.args.get('url_id')) if request.args.get('url_id') else None
-        user_id = int(request.args.get('user_id')) if request.args.get('user_id') else None
-        page = request.args.get('page')
-        page = int(page) if page is not None else 1
-        per_page = request.args.get('per_page')
-        per_page = int(per_page) if per_page is not None else 20
-    except ValueError:
-        return jsonify({'error': 'Malformed query parameters'}), 400
-
-    if page < 1 or per_page < 1:
-        return jsonify({'error': 'Invalid pagination parameters'}), 400
-        
+    url_id = request.args.get('url_id', type=int)
+    user_id = request.args.get('user_id', type=int)
     event_type = request.args.get('event_type')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
     
     query = Event.select()
     if url_id:

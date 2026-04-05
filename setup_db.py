@@ -31,27 +31,22 @@ def setup():
     with open('seed_data/users.csv') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            User.get_or_create(id=row['id'], defaults={'username': row['username'], 'email': row['email']})
+            User.create(id=row['id'], username=row['username'], email=row['email'], created_at=row['created_at'])
     print(f"✅ Loaded {User.select().count()} users")
 
-    # Load URLs
+    # Load urls
     with open('seed_data/urls.csv') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            URL.get_or_create(id=row['id'], defaults={'short_code': row['short_code'], 'original_url': row['original_url'], 'user_id': row.get('user_id') or None, 'title': row['title'], 'is_active': row['is_active'].lower() == 'true', 'created_at': row['created_at'], 'updated_at': row['updated_at']})
+            URL.create(id=row['id'], user_id=row['user_id'], short_code=row['short_code'], original_url=row['original_url'], title=row.get('title'), is_active=row.get('is_active','True').lower()=='true', created_at=row['created_at'], updated_at=row.get('updated_at', row['created_at']))
     print(f"✅ Loaded {URL.select().count()} URLs")
 
     # Load events
     with open('seed_data/events.csv') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            Event.get_or_create(id=row['id'], defaults={'url_id': row.get('url_id') or None, 'user_id': row.get('user_id') or None, 'event_type': row['event_type'], 'timestamp': row['timestamp'], 'details': row.get('details')})
+            Event.create(id=row['id'], url_id=row.get('url_id'), user_id=row.get('user_id'), event_type=row['event_type'], timestamp=row['timestamp'], details=row.get('details'))
     print(f"✅ Loaded {Event.select().count()} events")
-    
-    # Recalibrate PostgreSQL auto-increment sequences
-    db.execute_sql("SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1))")
-    db.execute_sql("SELECT setval('urls_id_seq', COALESCE((SELECT MAX(id) FROM urls), 1))")
-    db.execute_sql("SELECT setval('events_id_seq', COALESCE((SELECT MAX(id) FROM events), 1))")
 
     db.close()
     print("🎉 Setup complete!")

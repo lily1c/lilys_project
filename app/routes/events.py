@@ -75,10 +75,10 @@ def get_event(event_id):
 @events_bp.route('/events', methods=['POST'])
 def create_event():
     import json
-    # The Fractured Vessel: Validate the container (Challenge #6)
+    # The Deceitful Scroll & Fractured Vessel: Protect the archives from non-object payloads
     data = request.get_json(force=True, silent=True)
     if not isinstance(data, dict):
-        return jsonify({'error': 'Malformed JSON or non-object payload'}), 400
+        return jsonify({'error': 'Malformed JSON or non-object payload (Deceitful Scroll)'}), 400
         
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
@@ -91,9 +91,9 @@ def create_event():
         
     details = data.get('details')
     if details is not None:
-        # Must be a proper vessel (dict), not a loose string (The Fractured Vessel)
+        # The Deceitful Scroll: Must be a 'whole book' (dict), not a 'single word' (string)
         if not isinstance(details, dict):
-            return jsonify({'error': 'Details must be a JSON object (vessel), not a string or mist'}), 400
+            return jsonify({'error': 'Details must be a JSON object, not a string (Deceitful Scroll)'}), 400
         details = json.dumps(details)
             
     url_id = data.get('url_id')

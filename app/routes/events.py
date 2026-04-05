@@ -75,10 +75,10 @@ def get_event(event_id):
 @events_bp.route('/events', methods=['POST'])
 def create_event():
     import json
+    # The Fractured Vessel: Validate the container (Challenge #6)
     data = request.get_json(force=True, silent=True)
-    
-    if not data or not isinstance(data, dict):
-        return jsonify({'error': 'Malformed JSON or no data provided'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Malformed JSON or non-object payload'}), 400
         
     if 'event_type' not in data:
         return jsonify({'error': 'Missing required field: event_type'}), 400
@@ -91,12 +91,10 @@ def create_event():
         
     details = data.get('details')
     if details is not None:
-        if isinstance(details, dict):
-            details = json.dumps(details)
-        elif isinstance(details, str):
-            pass
-        else:
-            return jsonify({'error': 'Invalid data type for details'}), 400
+        # Must be a proper vessel (dict), not a loose string (The Fractured Vessel)
+        if not isinstance(details, dict):
+            return jsonify({'error': 'Details must be a JSON object (vessel), not a string or mist'}), 400
+        details = json.dumps(details)
             
     url_id = data.get('url_id')
     user_id = data.get('user_id')

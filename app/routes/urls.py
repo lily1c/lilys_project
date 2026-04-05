@@ -215,7 +215,7 @@ def redirect_url(short_code):
                 if not url_data.get('is_active', True):
                     return jsonify({'error': 'URL not found'}), 404
                 
-                # Log event (Challenge #4)
+                # Log event (Challenge #4 - The Unseen Observer)
                 details = {
                     'ip': request.remote_addr,
                     'user_agent': request.user_agent.string,
@@ -227,6 +227,7 @@ def redirect_url(short_code):
                     'path': request.path
                 }
                 
+                # Success! Someone took note of the traveler.
                 Event.create(
                     url_id=url_data['id'],
                     user_id=url_data.get('user_id'),

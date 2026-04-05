@@ -86,7 +86,18 @@ def shorten():
 
 @urls_bp.route('/urls', methods=['GET'])
 def list_urls():
-    user_id = request.args.get('user_id', type=int)
+    try:
+        user_id = int(request.args.get('user_id')) if request.args.get('user_id') else None
+        page = request.args.get('page')
+        page = int(page) if page is not None else 1
+        per_page = request.args.get('per_page')
+        per_page = int(per_page) if per_page is not None else 20
+    except ValueError:
+        return jsonify({'error': 'Malformed query parameters'}), 400
+
+    if page < 1 or per_page < 1:
+        return jsonify({'error': 'Invalid pagination parameters'}), 400
+        
     is_active = request.args.get('is_active')
     
     query = URL.select()
@@ -96,11 +107,14 @@ def list_urls():
         query = query.where(URL.is_active == (is_active.lower() == 'true'))
         
     total_items = query.count()
+    events = query.paginate(page, min(per_page, 100))
     # FlATTENED list response
     return jsonify({
         'kind': 'list',
-        'sample': [model_to_dict(u) for u in query],
-        'total_items': total_items
+        'sample': [model_to_dict(u) for u in events],
+        'total_items': total_items,
+        'page': page,
+        'per_page': per_page
     })
 
 @urls_bp.route('/urls/<int:url_id>', methods=['GET'])
